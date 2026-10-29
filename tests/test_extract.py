@@ -178,3 +178,50 @@ def test_credit_note_keeps_negative_amounts(sample_file):
     assert result.net == -167.97
     assert result.vat == -35.27
     assert result.total == -203.24
+
+
+def test_different_models_do_not_share_a_cache_entry(sample_file):
+    first_client = FakeClient([VALID_RAW])
+    extract_module.extract_invoice(sample_file, client=first_client, model="model-a")
+    assert first_client.calls == 1
+
+    # Same file, different model: must be a cache miss, not a collision
+    # with model-a's cached result.
+    second_client = FakeClient([VALID_RAW])
+    extract_module.extract_invoice(sample_file, client=second_client, model="model-b")
+    assert second_client.calls == 1
+
+
+def test_on_usage_called_once_per_real_api_call(sample_file):
+    client = FakeClient([VALID_RAW])
+    seen = []
+
+    extract_module.extract_invoice(
+        sample_file, client=client, on_usage=lambda i, o: seen.append((i, o))
+    )
+
+    assert seen == [(100, 50)]  # _FakeUsage()'s defaults
+
+
+def test_on_usage_not_called_on_cache_hit(sample_file):
+    first_client = FakeClient([VALID_RAW])
+    extract_module.extract_invoice(sample_file, client=first_client)
+
+    seen = []
+    second_client = FakeClient([])
+    extract_module.extract_invoice(
+        sample_file, client=second_client, on_usage=lambda i, o: seen.append((i, o))
+    )
+
+    assert seen == []
+
+
+def test_is_cached_false_before_extraction_true_after(sample_file):
+    assert extract_module.is_cached(sample_file) is False
+
+    client = FakeClient([VALID_RAW])
+    extract_module.extract_invoice(sample_file, client=client)
+
+    assert extract_module.is_cached(sample_file) is True
+    # A different model is a different cache key, still uncached.
+    assert extract_module.is_cached(sample_file, model="some-other-model") is False

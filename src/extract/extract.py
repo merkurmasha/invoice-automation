@@ -16,12 +16,13 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import Callable
 
 import anthropic
 from dotenv import load_dotenv
 from pydantic import ValidationError
 
-from .config import CACHE_DIR, MODEL_NAME
+from .config import CACHE_DIR, MODEL_NAME, PROMPT_VERSION
 from .schema import ExtractedInvoice
 
 SYSTEM_PROMPT = """\
@@ -31,11 +32,20 @@ these rules strictly:
 
 - If a field is missing, unreadable, or not present on the document, \
 return null for it. Never guess or infer a value.
+- If an amount (net, vat, or total) is explicitly printed as zero — \
+"0", "0.00", "0,00 €", etc. — return 0 for it, not null. Only return \
+null when that field is genuinely absent from the document, not when \
+it is present and happens to be zero.
 - Copy numbers exactly as printed. Never calculate, correct, or "fix" a \
 figure, even if net + vat does not equal the printed total.
 - Report the supplier name exactly as printed on the document, \
 including its capitalisation and punctuation.
-- Dates must be in ISO format (YYYY-MM-DD).
+- These documents use day-first dates: a purely numeric date like \
+03/08/2026 or 03-08-2026 means day 03, month 08 (3rd of August), NOT \
+March 8th — unless the month is written as a word (e.g. "8 March \
+2026", "March 8, 2026", "08-Mar-2026"), in which case read it as \
+written. Always convert whatever is printed to ISO format \
+(YYYY-MM-DD).
 - document_type must be one of: invoice, credit_note, receipt.
 - For a credit note, net/vat/total should be negative numbers if the \
 document itself shows them as a reduction.
@@ -110,12 +120,22 @@ class ExtractionError(Exception):
     """Raised when extraction can't produce a valid result."""
 
 
-def _cache_path(file_bytes: bytes) -> Path:
-    # Keying on file contents + model name means a changed file, or a
-    # changed MODEL_NAME, naturally misses the cache instead of reusing
-    # a stale result.
-    key = hashlib.sha256(file_bytes + MODEL_NAME.encode()).hexdigest()
+def _cache_path(file_bytes: bytes, model: str) -> Path:
+    # Keying on file contents + model name + prompt version means a
+    # changed file, a different model, or a changed extraction prompt
+    # naturally misses the cache instead of reusing a stale result.
+    key = hashlib.sha256(
+        file_bytes + model.encode() + PROMPT_VERSION.encode()
+    ).hexdigest()
     return CACHE_DIR / f"{key}.json"
+
+
+def is_cached(path: str | Path, model: str | None = None) -> bool:
+    """Check whether this file + model already has a cached extraction,
+    without making an API call or needing a client/API key."""
+    model = model or MODEL_NAME
+    file_bytes = Path(path).read_bytes()
+    return _cache_path(file_bytes, model).exists()
 
 
 def _default_client() -> anthropic.Anthropic:
@@ -186,9 +206,11 @@ def _pdf_pages_to_image_blocks(path: Path) -> list[dict]:
     return blocks
 
 
-def _call_model(client: anthropic.Anthropic, content_blocks: list[dict]) -> dict:
+def _call_model(
+    client: anthropic.Anthropic, content_blocks: list[dict], model: str
+) -> tuple[dict, "anthropic.types.Usage"]:
     response = client.messages.create(
-        model=MODEL_NAME,
+        model=model,
         max_tokens=1024,
         system=SYSTEM_PROMPT,
         tools=[TOOL_DEFINITION],
@@ -214,19 +236,28 @@ def _call_model(client: anthropic.Anthropic, content_blocks: list[dict]) -> dict
 
     for block in response.content:
         if block.type == "tool_use":
-            return block.input
+            return block.input, usage
     raise ExtractionError("Claude's response did not include a tool call.")
 
 
 def extract_invoice(
-    path: str | Path, client: anthropic.Anthropic | None = None
+    path: str | Path,
+    client: anthropic.Anthropic | None = None,
+    model: str | None = None,
+    on_usage: Callable[[int, int], None] | None = None,
 ) -> ExtractedInvoice:
+    """Extract one document. `model` defaults to MODEL_NAME in config.py —
+    pass it explicitly to use a different model without touching that
+    default. `on_usage(input_tokens, output_tokens)`, if given, is called
+    once per real API call made (never on a cache hit), so a caller can
+    total up token usage across a batch of extractions."""
+    model = model or MODEL_NAME
     path = Path(path)
     if not path.exists():
         raise ExtractionError(f"File not found: {path}")
 
     file_bytes = path.read_bytes()
-    cache_path = _cache_path(file_bytes)
+    cache_path = _cache_path(file_bytes, model)
     if cache_path.exists():
         cached = json.loads(cache_path.read_text())
         return ExtractedInvoice.model_validate(cached)
@@ -235,7 +266,7 @@ def extract_invoice(
     content_blocks = _content_blocks_for(path, file_bytes)
 
     try:
-        raw = _call_model(client, content_blocks)
+        raw, usage = _call_model(client, content_blocks, model)
     except anthropic.APIStatusError as error:
         if path.suffix.lower() == ".pdf" and error.status_code == 400:
             print(
@@ -243,14 +274,18 @@ def extract_invoice(
                 "as images with pymupdf instead."
             )
             content_blocks = _pdf_pages_to_image_blocks(path)
-            raw = _call_model(client, content_blocks)
+            raw, usage = _call_model(client, content_blocks, model)
         else:
             raise
+    if on_usage:
+        on_usage(usage.input_tokens, usage.output_tokens)
 
     try:
         parsed = ExtractedInvoice.model_validate(raw)
     except ValidationError:
-        raw = _call_model(client, content_blocks)
+        raw, usage = _call_model(client, content_blocks, model)
+        if on_usage:
+            on_usage(usage.input_tokens, usage.output_tokens)
         try:
             parsed = ExtractedInvoice.model_validate(raw)
         except ValidationError as second_error:
