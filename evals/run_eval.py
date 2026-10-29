@@ -46,6 +46,25 @@ def _load_answer_key() -> list[dict]:
     return json.loads(ANSWER_KEY_PATH.read_text())
 
 
+def genuinely_skipped(
+    all_entries: list[dict],
+    extracted_by_file: dict[str, object],
+    extraction_failures: list[tuple[str, str]],
+) -> list[str]:
+    """Files with no result anywhere in the report: not extracted this
+    run, and not already explained by an extraction failure. Must be
+    computed AFTER extraction runs — the pre-run cache snapshot isn't
+    good enough, since a live run goes on to extract whatever was
+    uncached before it started."""
+    extraction_failure_files = {f for f, _ in extraction_failures}
+    return [
+        entry["file"]
+        for entry in all_entries
+        if entry["file"] not in extracted_by_file
+        and entry["file"] not in extraction_failure_files
+    ]
+
+
 def _pdf_sort_key(file_name: str) -> tuple[str, bool, str]:
     """Sort PDFs so an original always comes before its _dup/_near
     variant, regardless of plain alphabetical ordering."""
@@ -103,7 +122,11 @@ def main(argv: list[str] | None = None) -> int:
         entry["file"]: extract_module.is_cached(DATA_DIR / entry["file"], model)
         for entry in all_entries
     }
-    not_cached = [f for f, is_cached in cached.items() if not is_cached]
+    # This is the PRE-run cache state, used only for the cost estimate /
+    # confirmation prompt below. A live run goes on to extract these
+    # files, so this list must never be reused as "what the report
+    # should call skipped" — see `not_cached` built after the run.
+    uncached_before_run = [f for f, is_cached in cached.items() if not is_cached]
 
     print("Trap -> expected validation outcome:")
     for trap, expectation in scoring.TRAP_EXPECTATIONS.items():
@@ -111,16 +134,16 @@ def main(argv: list[str] | None = None) -> int:
     print()
 
     if args.offline:
-        if not_cached:
-            print(f"{len(not_cached)} file(s) have no cached result for model '{model}' — offline mode, skipping (not scored as failures):")
-            for f in not_cached:
+        if uncached_before_run:
+            print(f"{len(uncached_before_run)} file(s) have no cached result for model '{model}' — offline mode, skipping (not scored as failures):")
+            for f in uncached_before_run:
                 print(f"  - {f}")
             print()
     else:
-        if not_cached:
-            estimate = _estimate_tokens(not_cached)
-            print(f"{len(not_cached)} file(s) are not cached for model '{model}' and need a live API call:")
-            for f in not_cached:
+        if uncached_before_run:
+            estimate = _estimate_tokens(uncached_before_run)
+            print(f"{len(uncached_before_run)} file(s) are not cached for model '{model}' and need a live API call:")
+            for f in uncached_before_run:
                 print(f"  - {f}")
             print(
                 f"\nRough estimate: ~{estimate['input']} input tokens, "
@@ -177,6 +200,8 @@ def main(argv: list[str] | None = None) -> int:
             photo_validation[entry["file"]] = validate_invoice(result, photo_detector, today=today)
 
     elapsed_seconds = time.monotonic() - start_time
+
+    not_cached = genuinely_skipped(all_entries, extracted_by_file, extraction_failures)
 
     field_scores: list[scoring.FieldScore] = []
     for entry in all_entries:

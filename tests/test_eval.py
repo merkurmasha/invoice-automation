@@ -13,6 +13,7 @@ from src.validate.validate import validate_invoice
 from datetime import date
 
 from evals import scoring
+from evals.run_eval import genuinely_skipped
 
 CONFIDENCE_FIELD_NAMES = [
     "supplier",
@@ -165,3 +166,41 @@ def test_photo_validated_with_fresh_detector_is_not_flagged_as_duplicate_of_its_
     validate_invoice(make_extracted(), shared_detector, today=date(2026, 1, 1))
     reused_result = validate_invoice(make_extracted(), shared_detector, today=date(2026, 1, 1))
     assert any(i.code == "DUPLICATE" for i in reused_result.issues)
+
+
+# ---------------------------------------------------------------------------
+# genuinely_skipped (evals/run_eval.py) — the "Not cached" report bug.
+#
+# Previously this list was the PRE-run cache snapshot, so after a live
+# run it still listed files that had just been successfully extracted.
+# It must instead reflect what actually has no result in the report.
+# ---------------------------------------------------------------------------
+
+
+def test_genuinely_skipped_excludes_files_extracted_this_run():
+    all_entries = [{"file": "invoices/a.pdf"}, {"file": "invoices/b.pdf"}]
+    # Both were uncached before the run, but both got extracted live —
+    # simulated here by both being present in extracted_by_file.
+    extracted_by_file = {"invoices/a.pdf": object(), "invoices/b.pdf": object()}
+
+    skipped = genuinely_skipped(all_entries, extracted_by_file, extraction_failures=[])
+
+    assert skipped == []
+
+
+def test_genuinely_skipped_excludes_recorded_extraction_failures():
+    all_entries = [{"file": "invoices/a.pdf"}]
+    extraction_failures = [("invoices/a.pdf", "schema validation failed twice")]
+
+    skipped = genuinely_skipped(all_entries, extracted_by_file={}, extraction_failures=extraction_failures)
+
+    assert skipped == []
+
+
+def test_genuinely_skipped_lists_files_with_neither_result_nor_failure():
+    all_entries = [{"file": "invoices/a.pdf"}, {"file": "invoices/b.pdf"}]
+    extracted_by_file = {"invoices/a.pdf": object()}
+
+    skipped = genuinely_skipped(all_entries, extracted_by_file, extraction_failures=[])
+
+    assert skipped == ["invoices/b.pdf"]
