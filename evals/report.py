@@ -92,11 +92,16 @@ def build_report(data: dict) -> tuple[str, dict]:
     scores: list[FieldScore] = data["field_scores"]
     trap_results: list[TrapResult] = data["trap_results"]
     photo_vs_pdf = data["photo_vs_pdf"]
+    dataset = data.get("dataset", "synthetic")
 
     overall_correct, overall_total = overall_accuracy(scores)
     by_doc_kind = accuracy_breakdown(scores, lambda s: s.doc_kind)
     by_language = accuracy_breakdown(scores, lambda s: s.language or "unknown")
     by_currency = accuracy_breakdown(scores, lambda s: s.currency or "unknown")
+    by_challenge = None
+    if dataset == "heldout":
+        file_challenges = data.get("file_challenges", {})
+        by_challenge = accuracy_breakdown(scores, lambda s: file_challenges.get(s.file) or "unknown")
 
     misses = field_mismatches(scores)
     t_misses = trap_misses(trap_results)
@@ -128,6 +133,9 @@ def build_report(data: dict) -> tuple[str, dict]:
     md.append("")
     md.append(_accuracy_table("By currency", by_currency))
     md.append("")
+    if by_challenge is not None:
+        md.append(_accuracy_table("By challenge", by_challenge))
+        md.append("")
 
     md.append("## Validation / trap scoring")
     md.append("")
@@ -201,6 +209,7 @@ def build_report(data: dict) -> tuple[str, dict]:
         "accuracy_by_doc_kind": by_doc_kind,
         "accuracy_by_language": by_language,
         "accuracy_by_currency": by_currency,
+        **({"accuracy_by_challenge": by_challenge} if by_challenge is not None else {}),
         "trap_results": [
             {
                 "file": r.file,

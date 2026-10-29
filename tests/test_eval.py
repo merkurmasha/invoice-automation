@@ -6,13 +6,17 @@ itself, not any particular extraction result.
 
 from __future__ import annotations
 
+import json
+from datetime import date
+from pathlib import Path
+
+from src.extract import config as extract_config
 from src.extract.schema import ExtractedInvoice
 from src.validate.checks import Issue
 from src.validate.duplicates import DuplicateDetector
 from src.validate.validate import validate_invoice
-from datetime import date
 
-from evals import scoring
+from evals import run_eval, scoring
 from evals.run_eval import genuinely_skipped
 
 CONFIDENCE_FIELD_NAMES = [
@@ -248,3 +252,94 @@ def test_duplicate_exact_defaults_to_not_is_repeat():
     result = scoring.evaluate_trap("invoices/x.pdf", "duplicate_exact", [])
 
     assert result.caught is True
+
+
+# ---------------------------------------------------------------------------
+# --dataset heldout (evals/run_eval.py). No real API call anywhere here -
+# extract_module.is_cached and extract_module.extract_invoice are both
+# monkeypatched, so "extraction" is just a lookup into the answer key
+# itself. This checks the --dataset *plumbing* (paths, filename, the new
+# "By challenge" report section), not extraction accuracy.
+# ---------------------------------------------------------------------------
+
+
+def _extracted_from_answer(entry: dict) -> ExtractedInvoice:
+    return ExtractedInvoice.model_validate(
+        {
+            "supplier": entry["supplier_as_printed"],
+            "invoice_number": entry["invoice_number"],
+            "issue_date": entry["issue_date"],
+            "due_date": entry["due_date"],
+            "currency": entry["currency"],
+            "net": entry["net"],
+            "vat": entry["vat"],
+            "total": entry["total"],
+            "document_type": entry["document_type"],
+            "language": entry["language"],
+            "confidence": {field: 0.95 for field in CONFIDENCE_FIELD_NAMES},
+        }
+    )
+
+
+def test_dataset_flag_defaults_to_synthetic():
+    assert run_eval.parse_args([]).dataset == "synthetic"
+
+
+def test_dataset_flag_accepts_heldout():
+    assert run_eval.parse_args(["--dataset", "heldout"]).dataset == "heldout"
+
+
+def test_dataset_heldout_runs_end_to_end_with_a_mocked_extractor(tmp_path, monkeypatch):
+    heldout_dir = extract_config.PROJECT_ROOT / "data" / "heldout"
+    answers_by_file = {e["file"]: e for e in json.loads((heldout_dir / "answer_key.json").read_text())}
+
+    def fake_extract_invoice(path, model=None, on_usage=None):
+        rel = Path(path).relative_to(heldout_dir).as_posix()
+        return _extracted_from_answer(answers_by_file[rel])
+
+    monkeypatch.setattr(run_eval.extract_module, "is_cached", lambda path, model=None: True)
+    monkeypatch.setattr(run_eval.extract_module, "extract_invoice", fake_extract_invoice)
+    monkeypatch.setattr(run_eval, "RESULTS_DIR", tmp_path)
+
+    exit_code = run_eval.main(["--dataset", "heldout"])
+
+    assert exit_code == 0
+    md_files = list(tmp_path.glob("*_heldout.md"))
+    json_files = list(tmp_path.glob("*_heldout.json"))
+    assert len(md_files) == 1
+    assert len(json_files) == 1
+
+    report = json.loads(json_files[0].read_text())
+    # A perfect mocked extraction should score 100% and expose a
+    # per-challenge accuracy breakdown that the synthetic report doesn't have.
+    assert report["overall_accuracy"]["correct"] == report["overall_accuracy"]["total"]
+    assert "accuracy_by_challenge" in report
+    assert "us_date" in report["accuracy_by_challenge"]
+    assert "By challenge" in md_files[0].read_text()
+
+
+def test_default_dataset_run_is_unaffected_by_the_dataset_flag(tmp_path, monkeypatch):
+    synthetic_dir = extract_config.PROJECT_ROOT / "data" / "synthetic"
+    answers_by_file = {e["file"]: e for e in json.loads((synthetic_dir / "answer_key.json").read_text())}
+
+    def fake_extract_invoice(path, model=None, on_usage=None):
+        rel = Path(path).relative_to(synthetic_dir).as_posix()
+        return _extracted_from_answer(answers_by_file[rel])
+
+    monkeypatch.setattr(run_eval.extract_module, "is_cached", lambda path, model=None: True)
+    monkeypatch.setattr(run_eval.extract_module, "extract_invoice", fake_extract_invoice)
+    monkeypatch.setattr(run_eval, "RESULTS_DIR", tmp_path)
+
+    exit_code = run_eval.main([])  # no --dataset flag at all
+
+    assert exit_code == 0
+    md_files = list(tmp_path.glob("*.md"))
+    assert len(md_files) == 1
+    assert "heldout" not in md_files[0].name
+    assert "synthetic" not in md_files[0].name  # default filename pattern is unsuffixed
+
+    md_text = md_files[0].read_text()
+    assert "By challenge" not in md_text
+
+    report = json.loads(next(tmp_path.glob("*.json")).read_text())
+    assert "accuracy_by_challenge" not in report

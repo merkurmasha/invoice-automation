@@ -3,15 +3,22 @@ validate, scores the result against data/synthetic/answer_key.json, and
 writes a report.
 
 Runnable as:
-    python -m evals.run_eval              # live run, asks before calling the API
-    python -m evals.run_eval --offline     # score from cache only, never calls the API
-    python -m evals.run_eval --model NAME  # override the model (see config.py)
+    python -m evals.run_eval                   # live run, asks before calling the API
+    python -m evals.run_eval --offline          # score from cache only, never calls the API
+    python -m evals.run_eval --model NAME       # override the model (see config.py)
+    python -m evals.run_eval --dataset heldout  # score data/heldout/ instead of data/synthetic/
 
 Per CLAUDE.md, this never calls the Claude API without the human typing
 "yes" first, and it never touches data/cache/seen_invoices.json (that's
 the production duplicate-detector cache — this harness uses its own
 fresh, in-memory detectors so a fixture file can never pollute real
 app state, and a real run can never pollute the eval).
+
+--dataset heldout points every step of this same pipeline at
+data/heldout/ (built by src/synthetic/heldout.py) instead of
+data/synthetic/ — a set of documents the extraction prompt was never
+tuned against, for an honest read on generalisation. The default (no
+flag) behaviour is untouched either way.
 """
 
 from __future__ import annotations
@@ -32,8 +39,6 @@ from src.validate.validate import validate_invoice
 from . import scoring
 from .report import build_report, write_report
 
-DATA_DIR = extract_config.PROJECT_ROOT / "data" / "synthetic"
-ANSWER_KEY_PATH = DATA_DIR / "answer_key.json"
 RESULTS_DIR = extract_config.PROJECT_ROOT / "evals" / "results"
 
 # Rough per-document token estimate, used only to tell the human what a
@@ -42,8 +47,8 @@ _ESTIMATED_INPUT_TOKENS = {"pdf": 3500, "photo": 6500}
 _ESTIMATED_OUTPUT_TOKENS = 400
 
 
-def _load_answer_key() -> list[dict]:
-    return json.loads(ANSWER_KEY_PATH.read_text())
+def _load_answer_key(path: Path) -> list[dict]:
+    return json.loads(path.read_text())
 
 
 def genuinely_skipped(
@@ -103,6 +108,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         help="Override the model used for extraction (defaults to MODEL_NAME in src/extract/config.py).",
     )
+    parser.add_argument(
+        "--dataset",
+        choices=["synthetic", "heldout"],
+        default="synthetic",
+        help=(
+            "Which dataset to evaluate: 'synthetic' (default, the tuned dev set in "
+            "data/synthetic/) or 'heldout' (data/heldout/ — not tuned against)."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -110,7 +124,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     model = args.model or extract_config.MODEL_NAME
 
-    answer_key = _load_answer_key()
+    data_dir = extract_config.PROJECT_ROOT / "data" / args.dataset
+    answer_key_path = data_dir / "answer_key.json"
+    answer_key = _load_answer_key(answer_key_path)
     pdf_entries = sorted(
         (e for e in answer_key if e["file"].startswith("invoices/")),
         key=lambda e: _pdf_sort_key(e["file"]),
@@ -119,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
     all_entries = pdf_entries + photo_entries
 
     cached = {
-        entry["file"]: extract_module.is_cached(DATA_DIR / entry["file"], model)
+        entry["file"]: extract_module.is_cached(data_dir / entry["file"], model)
         for entry in all_entries
     }
     # This is the PRE-run cache state, used only for the cost estimate /
@@ -170,7 +186,7 @@ def main(argv: list[str] | None = None) -> int:
             return None
         try:
             result = extract_module.extract_invoice(
-                DATA_DIR / file_name, model=model, on_usage=on_usage
+                data_dir / file_name, model=model, on_usage=on_usage
             )
             extracted_by_file[file_name] = result
             return result
@@ -243,12 +259,21 @@ def main(argv: list[str] | None = None) -> int:
         "field_scores": field_scores,
         "trap_results": trap_results,
         "photo_vs_pdf": photo_vs_pdf,
+        "dataset": args.dataset,
     }
+    if args.dataset == "heldout":
+        report_data["file_challenges"] = {
+            entry["file"]: entry.get("challenge") for entry in all_entries
+        }
     markdown_text, json_data = build_report(report_data)
 
     model_slug = model.replace("/", "-")
-    md_path = RESULTS_DIR / f"{timestamp}_{model_slug}_{extract_config.PROMPT_VERSION}.md"
-    json_path = RESULTS_DIR / f"{timestamp}_{model_slug}_{extract_config.PROMPT_VERSION}.json"
+    # Default (synthetic) behaviour is untouched: no dataset suffix on the
+    # filename. A heldout run gets "_heldout" so it's never confused with
+    # (or silently overwrites) a synthetic report.
+    dataset_suffix = "" if args.dataset == "synthetic" else f"_{args.dataset}"
+    md_path = RESULTS_DIR / f"{timestamp}_{model_slug}_{extract_config.PROMPT_VERSION}{dataset_suffix}.md"
+    json_path = RESULTS_DIR / f"{timestamp}_{model_slug}_{extract_config.PROMPT_VERSION}{dataset_suffix}.json"
     write_report(markdown_text, json_data, md_path, json_path)
 
     overall_correct, overall_total = scoring.overall_accuracy(field_scores)
