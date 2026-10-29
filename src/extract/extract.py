@@ -22,7 +22,7 @@ import anthropic
 from dotenv import load_dotenv
 from pydantic import ValidationError
 
-from .config import CACHE_DIR, MODEL_NAME
+from .config import CACHE_DIR, MODEL_NAME, PROMPT_VERSION
 from .schema import ExtractedInvoice
 
 SYSTEM_PROMPT = """\
@@ -32,11 +32,20 @@ these rules strictly:
 
 - If a field is missing, unreadable, or not present on the document, \
 return null for it. Never guess or infer a value.
+- If an amount (net, vat, or total) is explicitly printed as zero — \
+"0", "0.00", "0,00 €", etc. — return 0 for it, not null. Only return \
+null when that field is genuinely absent from the document, not when \
+it is present and happens to be zero.
 - Copy numbers exactly as printed. Never calculate, correct, or "fix" a \
 figure, even if net + vat does not equal the printed total.
 - Report the supplier name exactly as printed on the document, \
 including its capitalisation and punctuation.
-- Dates must be in ISO format (YYYY-MM-DD).
+- These documents use day-first dates: a purely numeric date like \
+03/08/2026 or 03-08-2026 means day 03, month 08 (3rd of August), NOT \
+March 8th — unless the month is written as a word (e.g. "8 March \
+2026", "March 8, 2026", "08-Mar-2026"), in which case read it as \
+written. Always convert whatever is printed to ISO format \
+(YYYY-MM-DD).
 - document_type must be one of: invoice, credit_note, receipt.
 - For a credit note, net/vat/total should be negative numbers if the \
 document itself shows them as a reduction.
@@ -112,10 +121,12 @@ class ExtractionError(Exception):
 
 
 def _cache_path(file_bytes: bytes, model: str) -> Path:
-    # Keying on file contents + model name means a changed file, or a
-    # different model, naturally misses the cache instead of reusing a
-    # stale result.
-    key = hashlib.sha256(file_bytes + model.encode()).hexdigest()
+    # Keying on file contents + model name + prompt version means a
+    # changed file, a different model, or a changed extraction prompt
+    # naturally misses the cache instead of reusing a stale result.
+    key = hashlib.sha256(
+        file_bytes + model.encode() + PROMPT_VERSION.encode()
+    ).hexdigest()
     return CACHE_DIR / f"{key}.json"
 
 

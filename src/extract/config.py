@@ -9,6 +9,12 @@ from pathlib import Path
 # The only place the Claude model name should appear in this project.
 MODEL_NAME = "claude-haiku-5-5"
 
+# Bumped whenever SYSTEM_PROMPT in extract.py changes meaningfully. Part
+# of the cache key (see extract.py's _cache_path), so a prompt change
+# naturally misses the cache instead of reusing results extracted under
+# the old wording — without having to delete the cache by hand.
+PROMPT_VERSION = "v2"
+
 # Where extraction results are cached on disk, keyed by file contents + model.
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CACHE_DIR = PROJECT_ROOT / "data" / "cache"
