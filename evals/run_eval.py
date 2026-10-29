@@ -215,7 +215,10 @@ def main(argv: list[str] | None = None) -> int:
     for entry in pdf_entries:
         result = pdf_validation.get(entry["file"])
         if result is not None:
-            trap_results.append(scoring.evaluate_trap(entry["file"], entry["trap"], result.issues))
+            is_repeat = Path(entry["file"]).stem.endswith("_dup")
+            trap_results.append(
+                scoring.evaluate_trap(entry["file"], entry["trap"], result.issues, is_repeat=is_repeat)
+            )
     for entry in photo_entries:
         result = photo_validation.get(entry["file"])
         if result is not None:

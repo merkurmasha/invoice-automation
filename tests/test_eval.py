@@ -204,3 +204,47 @@ def test_genuinely_skipped_lists_files_with_neither_result_nor_failure():
     skipped = genuinely_skipped(all_entries, extracted_by_file, extraction_failures=[])
 
     assert skipped == ["invoices/b.pdf"]
+
+
+# ---------------------------------------------------------------------------
+# duplicate_exact: only the repeat (_dup) file should be expected to raise
+# DUPLICATE. The synthetic generator tags the original and its _dup copy
+# with the same trap, so the original — being the first thing the
+# detector ever sees — can never raise DUPLICATE itself.
+# ---------------------------------------------------------------------------
+
+
+def test_duplicate_exact_original_expects_no_error_not_is_repeat():
+    result = scoring.evaluate_trap("invoices/electricity_2026-08-10.pdf", "duplicate_exact", [], is_repeat=False)
+
+    assert result.caught is True
+
+
+def test_duplicate_exact_original_with_an_error_is_a_miss():
+    issues = [Issue("error", "MATH_MISMATCH", "unrelated problem")]
+
+    result = scoring.evaluate_trap("invoices/electricity_2026-08-10.pdf", "duplicate_exact", issues, is_repeat=False)
+
+    assert result.caught is False
+
+
+def test_duplicate_exact_repeat_expects_duplicate_is_repeat_true():
+    issues = [Issue("error", "DUPLICATE", "seen before")]
+
+    result = scoring.evaluate_trap("invoices/electricity_2026-08-10_dup.pdf", "duplicate_exact", issues, is_repeat=True)
+
+    assert result.caught is True
+
+
+def test_duplicate_exact_repeat_missing_duplicate_is_a_miss():
+    result = scoring.evaluate_trap("invoices/electricity_2026-08-10_dup.pdf", "duplicate_exact", [], is_repeat=True)
+
+    assert result.caught is False
+
+
+def test_duplicate_exact_defaults_to_not_is_repeat():
+    # is_repeat defaults to False, so a caller that forgets to pass it
+    # gets the "original" expectation, not a silent pass-through.
+    result = scoring.evaluate_trap("invoices/x.pdf", "duplicate_exact", [])
+
+    assert result.caught is True

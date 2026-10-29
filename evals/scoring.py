@@ -158,7 +158,12 @@ def compare_to_source(photo_extracted: ExtractedInvoice, pdf_extracted: Extracte
 TRAP_EXPECTATIONS: dict[str | None, str] = {
     "maths_error": "must include MATH_MISMATCH",
     "no_due_date": "must include MISSING_DUE_DATE",
-    "duplicate_exact": "must include DUPLICATE",
+    # The synthetic generator tags BOTH the original file and its _dup
+    # copy as duplicate_exact (the _dup job is a literal copy of the
+    # original job, trap included — see src/synthetic/jobs.py). Only the
+    # second one seen by the detector can ever raise DUPLICATE; the
+    # original is the first sighting, so it must come back clean.
+    "duplicate_exact": "original: must NOT include any error; repeat (_dup) occurrence: must include DUPLICATE",
     "duplicate_near": "must include AMOUNT_CONFLICT",
     "credit_note": (
         "must NOT include MATH_MISMATCH or a negative-amount issue "
@@ -192,7 +197,12 @@ class TrapResult:
     note: str
 
 
-def evaluate_trap(file_name: str, trap: str | None, issues: list[Issue]) -> TrapResult:
+def evaluate_trap(
+    file_name: str, trap: str | None, issues: list[Issue], *, is_repeat: bool = False
+) -> TrapResult:
+    """`is_repeat` only matters for trap == "duplicate_exact": pass True
+    for the second (``_dup``) file in the pair, False for the original —
+    see the comment on TRAP_EXPECTATIONS["duplicate_exact"]."""
     if trap not in TRAP_EXPECTATIONS:
         raise ValueError(
             f"{file_name}: unknown trap type {trap!r} — add it to "
@@ -209,7 +219,7 @@ def evaluate_trap(file_name: str, trap: str | None, issues: list[Issue]) -> Trap
     elif trap == "no_due_date":
         caught = "MISSING_DUE_DATE" in all_codes
     elif trap == "duplicate_exact":
-        caught = "DUPLICATE" in error_codes
+        caught = "DUPLICATE" in error_codes if is_repeat else not error_codes
     elif trap == "duplicate_near":
         caught = "AMOUNT_CONFLICT" in error_codes
     elif trap == "credit_note":
