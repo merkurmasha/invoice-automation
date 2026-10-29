@@ -12,6 +12,7 @@ dependencies = [
     "pandas",
     "rapidfuzz",
     "reportlab",
+    "pymupdf",
     "pillow",
     "python-dotenv",
     "anthropic",
