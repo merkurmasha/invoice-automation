@@ -10,6 +10,8 @@ have to parse ourselves.
 from __future__ import annotations
 
 import base64
+import hashlib
+import json
 import os
 from pathlib import Path
 
@@ -17,7 +19,7 @@ import anthropic
 from dotenv import load_dotenv
 from pydantic import ValidationError
 
-from .config import MODEL_NAME
+from .config import CACHE_DIR, MODEL_NAME
 from .schema import ExtractedInvoice
 
 SYSTEM_PROMPT = """\
@@ -104,6 +106,14 @@ TOOL_DEFINITION = {
 
 class ExtractionError(Exception):
     """Raised when extraction can't produce a valid result."""
+
+
+def _cache_path(file_bytes: bytes) -> Path:
+    # Keying on file contents + model name means a changed file, or a
+    # changed MODEL_NAME, naturally misses the cache instead of reusing
+    # a stale result.
+    key = hashlib.sha256(file_bytes + MODEL_NAME.encode()).hexdigest()
+    return CACHE_DIR / f"{key}.json"
 
 
 def _default_client() -> anthropic.Anthropic:
@@ -213,8 +223,13 @@ def extract_invoice(
     if not path.exists():
         raise ExtractionError(f"File not found: {path}")
 
-    client = client or _default_client()
     file_bytes = path.read_bytes()
+    cache_path = _cache_path(file_bytes)
+    if cache_path.exists():
+        cached = json.loads(cache_path.read_text())
+        return ExtractedInvoice.model_validate(cached)
+
+    client = client or _default_client()
     content_blocks = _content_blocks_for(path, file_bytes)
 
     try:
@@ -231,13 +246,17 @@ def extract_invoice(
             raise
 
     try:
-        return ExtractedInvoice.model_validate(raw)
+        parsed = ExtractedInvoice.model_validate(raw)
     except ValidationError:
         raw = _call_model(client, content_blocks)
         try:
-            return ExtractedInvoice.model_validate(raw)
+            parsed = ExtractedInvoice.model_validate(raw)
         except ValidationError as second_error:
             raise ExtractionError(
                 f"Claude's response for {path.name} did not match the "
                 f"expected schema, even after retrying once: {second_error}"
             ) from second_error
+
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    cache_path.write_text(json.dumps(raw, indent=2))
+    return parsed
