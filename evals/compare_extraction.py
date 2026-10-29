@@ -6,17 +6,16 @@ Per CLAUDE.md, it never runs on its own: it prints how many calls it's
 about to make and waits for you to type "yes" first.
 
 Run it yourself with:
-    python -m src.extract.compare
+    python evals/compare_extraction.py
 """
 
 from __future__ import annotations
 
 import json
 import math
-from pathlib import Path
 
-from .config import PROJECT_ROOT
-from .extract import ExtractionError, extract_invoice
+from src.extract.config import PROJECT_ROOT
+from src.extract.extract import ExtractionError, extract_invoice
 
 DATA_DIR = PROJECT_ROOT / "data" / "synthetic"
 ANSWER_KEY_PATH = DATA_DIR / "answer_key.json"
