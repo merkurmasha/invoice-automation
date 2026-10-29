@@ -234,6 +234,7 @@ def main(argv: list[str] | None = None) -> int:
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
     report_data = {
         "model": model,
+        "prompt_version": extract_config.PROMPT_VERSION,
         "timestamp": timestamp,
         "elapsed_seconds": elapsed_seconds,
         "usage": usage,
@@ -246,8 +247,8 @@ def main(argv: list[str] | None = None) -> int:
     markdown_text, json_data = build_report(report_data)
 
     model_slug = model.replace("/", "-")
-    md_path = RESULTS_DIR / f"{timestamp}_{model_slug}.md"
-    json_path = RESULTS_DIR / f"{timestamp}_{model_slug}.json"
+    md_path = RESULTS_DIR / f"{timestamp}_{model_slug}_{extract_config.PROMPT_VERSION}.md"
+    json_path = RESULTS_DIR / f"{timestamp}_{model_slug}_{extract_config.PROMPT_VERSION}.json"
     write_report(markdown_text, json_data, md_path, json_path)
 
     overall_correct, overall_total = scoring.overall_accuracy(field_scores)

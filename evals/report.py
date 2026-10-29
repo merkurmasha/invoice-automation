@@ -111,6 +111,7 @@ def build_report(data: dict) -> tuple[str, dict]:
     md.append("## Run metadata")
     md.append("")
     md.append(f"- Model: `{data['model']}`")
+    md.append(f"- Prompt version: `{data['prompt_version']}`")
     md.append(f"- Wall-clock time: {data['elapsed_seconds']:.1f}s")
     md.append(f"- Tokens used this run — input: {data['usage']['input']}, output: {data['usage']['output']}")
     md.append(f"- Not cached / skipped: {len(data['not_cached'])}")
@@ -190,6 +191,7 @@ def build_report(data: dict) -> tuple[str, dict]:
 
     json_data = {
         "model": data["model"],
+        "prompt_version": data["prompt_version"],
         "timestamp": data["timestamp"],
         "elapsed_seconds": data["elapsed_seconds"],
         "usage": data["usage"],
