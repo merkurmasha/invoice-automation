@@ -1,0 +1,862 @@
+{
+  "model": "claude-haiku-5-5",
+  "timestamp": "2026-10-29_1551",
+  "elapsed_seconds": 84.82113783305977,
+  "usage": {
+    "input": 149840,
+    "output": 15281
+  },
+  "not_cached": [
+    "invoices/accounting_2026-10-10.pdf",
+    "invoices/adobe_2026-07-05.pdf",
+    "invoices/adobe_2026-09-05.pdf",
+    "invoices/adobe_2026-10-05.pdf",
+    "invoices/adobe_2026-10-15.pdf",
+    "invoices/catering_2026-09-18.pdf",
+    "invoices/cloudhost_2026-07-08.pdf",
+    "invoices/courier_2026-08-14.pdf",
+    "invoices/coworking_2026-08-01.pdf",
+    "invoices/coworking_2026-09-01.pdf",
+    "invoices/coworking_2026-09-01_near.pdf",
+    "invoices/coworking_2026-10-01.pdf",
+    "invoices/electricity_2026-08-10.pdf",
+    "invoices/electricity_2026-08-10_dup.pdf",
+    "invoices/electricity_2026-09-10.pdf",
+    "invoices/electricity_2026-10-10.pdf",
+    "invoices/figma_2026-07-12.pdf",
+    "invoices/figma_2026-09-12.pdf",
+    "invoices/freelancer_2026-07-20.pdf",
+    "invoices/freelancer_2026-09-22.pdf",
+    "invoices/furniture_2026-08-25.pdf",
+    "invoices/insurance_2026-07-30.pdf",
+    "invoices/internet_2026-07-15.pdf",
+    "invoices/internet_2026-08-15.pdf",
+    "invoices/internet_2026-09-15.pdf",
+    "invoices/internet_2026-10-15.pdf",
+    "invoices/nordic_2026-08-01.pdf",
+    "invoices/notion_2026-07-03.pdf",
+    "invoices/notion_2026-08-03.pdf",
+    "invoices/notion_2026-09-03.pdf",
+    "invoices/notion_2026-10-03.pdf",
+    "invoices/officesupplies_2026-10-02.pdf",
+    "invoices/pixelco_2026-09-25.pdf",
+    "invoices/printer_2026-10-06.pdf",
+    "invoices/studiofonts_2026-09-09.pdf",
+    "photos/notion_2026-08-03.jpg",
+    "photos/coworking_2026-07-01.jpg",
+    "photos/internet_2026-10-15.jpg",
+    "photos/freelancer_2026-07-20.jpg",
+    "photos/studiofonts_2026-09-09.jpg"
+  ],
+  "extraction_failures": [],
+  "overall_accuracy": {
+    "correct": 448,
+    "total": 460
+  },
+  "accuracy_by_doc_kind": {
+    "pdf": [
+      389,
+      400
+    ],
+    "photo": [
+      59,
+      60
+    ]
+  },
+  "accuracy_by_language": {
+    "es": [
+      150,
+      150
+    ],
+    "en": [
+      158,
+      170
+    ],
+    "ca": [
+      140,
+      140
+    ]
+  },
+  "accuracy_by_currency": {
+    "EUR": [
+      410,
+      420
+    ],
+    "USD": [
+      18,
+      20
+    ],
+    "GBP": [
+      20,
+      20
+    ]
+  },
+  "trap_results": [
+    {
+      "file": "invoices/accounting_2026-10-10.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/adobe_2026-07-05.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/adobe_2026-08-05.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/adobe_2026-09-05.pdf",
+      "trap": "name_variant",
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/adobe_2026-10-05.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/adobe_2026-10-15.pdf",
+      "trap": "credit_note",
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/catering_2026-09-18.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/cloudhost_2026-07-08.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/courier_2026-08-14.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/coworking_2026-07-01.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/coworking_2026-08-01.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/coworking_2026-09-01.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/coworking_2026-09-01_near.pdf",
+      "trap": "duplicate_near",
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": [
+        "AMOUNT_CONFLICT"
+      ]
+    },
+    {
+      "file": "invoices/coworking_2026-10-01.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/electricity_2026-07-10.pdf",
+      "trap": "maths_error",
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": [
+        "MATH_MISMATCH"
+      ]
+    },
+    {
+      "file": "invoices/electricity_2026-08-10.pdf",
+      "trap": "duplicate_exact",
+      "caught": false,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/electricity_2026-08-10_dup.pdf",
+      "trap": "duplicate_exact",
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": [
+        "DUPLICATE"
+      ]
+    },
+    {
+      "file": "invoices/electricity_2026-09-10.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/electricity_2026-10-10.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/figma_2026-07-12.pdf",
+      "trap": "maths_error",
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": [
+        "MATH_MISMATCH"
+      ]
+    },
+    {
+      "file": "invoices/figma_2026-09-12.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/freelancer_2026-07-20.pdf",
+      "trap": "no_due_date",
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/freelancer_2026-09-22.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/furniture_2026-08-25.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/insurance_2026-07-30.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/internet_2026-07-15.pdf",
+      "trap": "maths_error",
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": [
+        "MATH_MISMATCH"
+      ]
+    },
+    {
+      "file": "invoices/internet_2026-08-15.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/internet_2026-09-15.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/internet_2026-10-15.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/nordic_2026-08-01.pdf",
+      "trap": "reverse_charge",
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": true,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/notion_2026-07-03.pdf",
+      "trap": "name_variant",
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/notion_2026-08-03.pdf",
+      "trap": "name_variant",
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/notion_2026-09-03.pdf",
+      "trap": "name_variant",
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/notion_2026-10-03.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/officesupplies_2026-10-02.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/pixelco_2026-09-25.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/printer_2026-08-18.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/printer_2026-10-06.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/studiofonts_2026-09-09.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/travel_2026-10-20.pdf",
+      "trap": "no_due_date",
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "photos/notion_2026-08-03.jpg",
+      "trap": "name_variant",
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "photos/coworking_2026-07-01.jpg",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "photos/internet_2026-10-15.jpg",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "photos/freelancer_2026-07-20.jpg",
+      "trap": "no_due_date",
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "photos/studiofonts_2026-09-09.jpg",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "photos/pixelco_2026-09-25.jpg",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    }
+  ],
+  "false_flag_tally": {},
+  "soft_flag_count": 1,
+  "field_mismatches": [
+    {
+      "file": "invoices/adobe_2026-09-05.pdf",
+      "field": "issue_date",
+      "expected": "2026-09-05",
+      "actual": "2026-05-09",
+      "confidence": 0.8
+    },
+    {
+      "file": "invoices/adobe_2026-09-05.pdf",
+      "field": "due_date",
+      "expected": "2026-10-05",
+      "actual": "2026-05-10",
+      "confidence": 0.8
+    },
+    {
+      "file": "invoices/adobe_2026-10-05.pdf",
+      "field": "issue_date",
+      "expected": "2026-10-05",
+      "actual": "2026-05-10",
+      "confidence": 0.8
+    },
+    {
+      "file": "invoices/figma_2026-09-12.pdf",
+      "field": "issue_date",
+      "expected": "2026-09-12",
+      "actual": "2026-12-09",
+      "confidence": 0.85
+    },
+    {
+      "file": "invoices/figma_2026-09-12.pdf",
+      "field": "due_date",
+      "expected": "2026-10-12",
+      "actual": "2026-12-10",
+      "confidence": 0.85
+    },
+    {
+      "file": "invoices/nordic_2026-08-01.pdf",
+      "field": "issue_date",
+      "expected": "2026-08-01",
+      "actual": "2026-01-08",
+      "confidence": 0.6
+    },
+    {
+      "file": "invoices/nordic_2026-08-01.pdf",
+      "field": "vat",
+      "expected": 0.0,
+      "actual": null,
+      "confidence": 0.9
+    },
+    {
+      "file": "invoices/notion_2026-08-03.pdf",
+      "field": "issue_date",
+      "expected": "2026-08-03",
+      "actual": "2026-03-08",
+      "confidence": 0.8
+    },
+    {
+      "file": "invoices/notion_2026-09-03.pdf",
+      "field": "issue_date",
+      "expected": "2026-09-03",
+      "actual": "2026-03-09",
+      "confidence": 0.95
+    },
+    {
+      "file": "invoices/notion_2026-09-03.pdf",
+      "field": "due_date",
+      "expected": "2026-10-03",
+      "actual": "2026-03-10",
+      "confidence": 0.95
+    },
+    {
+      "file": "invoices/notion_2026-10-03.pdf",
+      "field": "issue_date",
+      "expected": "2026-10-03",
+      "actual": "2026-03-10",
+      "confidence": 0.85
+    },
+    {
+      "file": "photos/studiofonts_2026-09-09.jpg",
+      "field": "due_date",
+      "expected": "2026-10-09",
+      "actual": "2026-09-10",
+      "confidence": 0.85
+    }
+  ],
+  "trap_misses": [
+    {
+      "file": "invoices/electricity_2026-08-10.pdf",
+      "trap": "duplicate_exact",
+      "note": "expected: must include DUPLICATE; got issues=none"
+    }
+  ],
+  "lowest_confidence_correct": [
+    {
+      "file": "invoices/adobe_2026-10-05.pdf",
+      "field": "due_date",
+      "confidence": 0.8
+    },
+    {
+      "file": "invoices/catering_2026-09-18.pdf",
+      "field": "language",
+      "confidence": 0.8
+    },
+    {
+      "file": "invoices/notion_2026-08-03.pdf",
+      "field": "due_date",
+      "confidence": 0.8
+    },
+    {
+      "file": "invoices/adobe_2026-08-05.pdf",
+      "field": "issue_date",
+      "confidence": 0.85
+    },
+    {
+      "file": "invoices/adobe_2026-08-05.pdf",
+      "field": "due_date",
+      "confidence": 0.85
+    }
+  ],
+  "high_confidence_wrong": [
+    {
+      "file": "invoices/notion_2026-09-03.pdf",
+      "field": "issue_date",
+      "confidence": 0.95
+    },
+    {
+      "file": "invoices/notion_2026-09-03.pdf",
+      "field": "due_date",
+      "confidence": 0.95
+    }
+  ],
+  "photo_vs_source_pdf": {
+    "photos/notion_2026-08-03.jpg": [
+      {
+        "field": "supplier",
+        "matches": true
+      },
+      {
+        "field": "invoice_number",
+        "matches": true
+      },
+      {
+        "field": "issue_date",
+        "matches": false
+      },
+      {
+        "field": "due_date",
+        "matches": true
+      },
+      {
+        "field": "currency",
+        "matches": true
+      },
+      {
+        "field": "net",
+        "matches": true
+      },
+      {
+        "field": "vat",
+        "matches": true
+      },
+      {
+        "field": "total",
+        "matches": true
+      },
+      {
+        "field": "document_type",
+        "matches": true
+      },
+      {
+        "field": "language",
+        "matches": true
+      }
+    ],
+    "photos/coworking_2026-07-01.jpg": [
+      {
+        "field": "supplier",
+        "matches": true
+      },
+      {
+        "field": "invoice_number",
+        "matches": true
+      },
+      {
+        "field": "issue_date",
+        "matches": true
+      },
+      {
+        "field": "due_date",
+        "matches": true
+      },
+      {
+        "field": "currency",
+        "matches": true
+      },
+      {
+        "field": "net",
+        "matches": true
+      },
+      {
+        "field": "vat",
+        "matches": true
+      },
+      {
+        "field": "total",
+        "matches": true
+      },
+      {
+        "field": "document_type",
+        "matches": true
+      },
+      {
+        "field": "language",
+        "matches": true
+      }
+    ],
+    "photos/internet_2026-10-15.jpg": [
+      {
+        "field": "supplier",
+        "matches": true
+      },
+      {
+        "field": "invoice_number",
+        "matches": true
+      },
+      {
+        "field": "issue_date",
+        "matches": true
+      },
+      {
+        "field": "due_date",
+        "matches": true
+      },
+      {
+        "field": "currency",
+        "matches": true
+      },
+      {
+        "field": "net",
+        "matches": true
+      },
+      {
+        "field": "vat",
+        "matches": true
+      },
+      {
+        "field": "total",
+        "matches": true
+      },
+      {
+        "field": "document_type",
+        "matches": true
+      },
+      {
+        "field": "language",
+        "matches": true
+      }
+    ],
+    "photos/freelancer_2026-07-20.jpg": [
+      {
+        "field": "supplier",
+        "matches": true
+      },
+      {
+        "field": "invoice_number",
+        "matches": true
+      },
+      {
+        "field": "issue_date",
+        "matches": true
+      },
+      {
+        "field": "due_date",
+        "matches": true
+      },
+      {
+        "field": "currency",
+        "matches": true
+      },
+      {
+        "field": "net",
+        "matches": true
+      },
+      {
+        "field": "vat",
+        "matches": true
+      },
+      {
+        "field": "total",
+        "matches": true
+      },
+      {
+        "field": "document_type",
+        "matches": true
+      },
+      {
+        "field": "language",
+        "matches": true
+      }
+    ],
+    "photos/studiofonts_2026-09-09.jpg": [
+      {
+        "field": "supplier",
+        "matches": true
+      },
+      {
+        "field": "invoice_number",
+        "matches": true
+      },
+      {
+        "field": "issue_date",
+        "matches": true
+      },
+      {
+        "field": "due_date",
+        "matches": false
+      },
+      {
+        "field": "currency",
+        "matches": true
+      },
+      {
+        "field": "net",
+        "matches": true
+      },
+      {
+        "field": "vat",
+        "matches": true
+      },
+      {
+        "field": "total",
+        "matches": true
+      },
+      {
+        "field": "document_type",
+        "matches": true
+      },
+      {
+        "field": "language",
+        "matches": true
+      }
+    ],
+    "photos/pixelco_2026-09-25.jpg": [
+      {
+        "field": "supplier",
+        "matches": true
+      },
+      {
+        "field": "invoice_number",
+        "matches": true
+      },
+      {
+        "field": "issue_date",
+        "matches": true
+      },
+      {
+        "field": "due_date",
+        "matches": true
+      },
+      {
+        "field": "currency",
+        "matches": true
+      },
+      {
+        "field": "net",
+        "matches": true
+      },
+      {
+        "field": "vat",
+        "matches": true
+      },
+      {
+        "field": "total",
+        "matches": true
+      },
+      {
+        "field": "document_type",
+        "matches": true
+      },
+      {
+        "field": "language",
+        "matches": true
+      }
+    ]
+  }
+}
