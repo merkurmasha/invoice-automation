@@ -1,0 +1,243 @@
+"""Turn one invoice/receipt file (PDF or JPG) into structured data.
+
+extract_invoice() sends the file to the Claude API and asks it to call a
+tool with the extracted fields. Using a tool call (instead of asking for
+free-form JSON) means Claude's answer always arrives as a structured
+dict we can validate against ExtractedInvoice, rather than text we'd
+have to parse ourselves.
+"""
+
+from __future__ import annotations
+
+import base64
+import os
+from pathlib import Path
+
+import anthropic
+from dotenv import load_dotenv
+from pydantic import ValidationError
+
+from .config import MODEL_NAME
+from .schema import ExtractedInvoice
+
+SYSTEM_PROMPT = """\
+You are an exact-data-extraction assistant for invoices, credit notes, \
+and receipts. Extract only what is printed on the document, following \
+these rules strictly:
+
+- If a field is missing, unreadable, or not present on the document, \
+return null for it. Never guess or infer a value.
+- Copy numbers exactly as printed. Never calculate, correct, or "fix" a \
+figure, even if net + vat does not equal the printed total.
+- Report the supplier name exactly as printed on the document, \
+including its capitalisation and punctuation.
+- Dates must be in ISO format (YYYY-MM-DD).
+- document_type must be one of: invoice, credit_note, receipt.
+- For a credit note, net/vat/total should be negative numbers if the \
+document itself shows them as a reduction.
+- language is the two-letter ISO 639-1 code of the document's language \
+(e.g. en, es, ca).
+- For every field, also give a confidence score between 0.0 (not \
+confident) and 1.0 (fully confident) in the value you extracted — or in \
+the fact that it is genuinely absent, if you returned null.
+
+Call the extract_invoice_data tool with your answer, and nothing else.\
+"""
+
+_CONFIDENCE_FIELDS = [
+    "supplier",
+    "invoice_number",
+    "issue_date",
+    "due_date",
+    "currency",
+    "net",
+    "vat",
+    "total",
+    "document_type",
+    "language",
+]
+
+TOOL_DEFINITION = {
+    "name": "extract_invoice_data",
+    "description": "Structured data extracted from an invoice, credit note, or receipt.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "supplier": {"type": ["string", "null"]},
+            "invoice_number": {"type": ["string", "null"]},
+            "issue_date": {
+                "type": ["string", "null"],
+                "description": "ISO format YYYY-MM-DD",
+            },
+            "due_date": {
+                "type": ["string", "null"],
+                "description": "ISO format YYYY-MM-DD",
+            },
+            "currency": {
+                "type": ["string", "null"],
+                "description": "ISO 4217 currency code, e.g. EUR",
+            },
+            "net": {"type": ["number", "null"]},
+            "vat": {"type": ["number", "null"]},
+            "total": {"type": ["number", "null"]},
+            "document_type": {
+                "type": ["string", "null"],
+                "enum": ["invoice", "credit_note", "receipt", None],
+            },
+            "language": {
+                "type": ["string", "null"],
+                "description": "ISO 639-1 two-letter code",
+            },
+            "confidence": {
+                "type": "object",
+                "properties": {
+                    field: {"type": "number", "minimum": 0, "maximum": 1}
+                    for field in _CONFIDENCE_FIELDS
+                },
+                "required": _CONFIDENCE_FIELDS,
+            },
+        },
+        "required": [*_CONFIDENCE_FIELDS, "confidence"],
+    },
+}
+
+
+class ExtractionError(Exception):
+    """Raised when extraction can't produce a valid result."""
+
+
+def _default_client() -> anthropic.Anthropic:
+    load_dotenv()
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise ExtractionError(
+            "ANTHROPIC_API_KEY is not set. Add it to your .env file."
+        )
+    return anthropic.Anthropic(api_key=api_key)
+
+
+def _content_blocks_for(path: Path, file_bytes: bytes) -> list[dict]:
+    suffix = path.suffix.lower()
+    encoded = base64.standard_b64encode(file_bytes).decode()
+    if suffix == ".pdf":
+        return [
+            {
+                "type": "document",
+                "source": {
+                    "type": "base64",
+                    "media_type": "application/pdf",
+                    "data": encoded,
+                },
+            }
+        ]
+    if suffix in (".jpg", ".jpeg"):
+        media_type = "image/jpeg"
+    elif suffix == ".png":
+        media_type = "image/png"
+    else:
+        raise ExtractionError(f"Unsupported file type: {suffix}")
+    return [
+        {
+            "type": "image",
+            "source": {
+                "type": "base64",
+                "media_type": media_type,
+                "data": encoded,
+            },
+        }
+    ]
+
+
+def _pdf_pages_to_image_blocks(path: Path) -> list[dict]:
+    """Fall back for models that reject PDF documents: render each page
+    to a PNG with pymupdf and send those as images instead."""
+    import pymupdf
+
+    blocks = []
+    doc = pymupdf.open(path)
+    try:
+        for page in doc:
+            pixmap = page.get_pixmap(dpi=200)
+            encoded = base64.standard_b64encode(pixmap.tobytes("png")).decode()
+            blocks.append(
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": "image/png",
+                        "data": encoded,
+                    },
+                }
+            )
+    finally:
+        doc.close()
+    return blocks
+
+
+def _call_model(client: anthropic.Anthropic, content_blocks: list[dict]) -> dict:
+    response = client.messages.create(
+        model=MODEL_NAME,
+        max_tokens=1024,
+        system=SYSTEM_PROMPT,
+        tools=[TOOL_DEFINITION],
+        tool_choice={"type": "tool", "name": "extract_invoice_data"},
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    *content_blocks,
+                    {
+                        "type": "text",
+                        "text": "Extract the invoice data from this document.",
+                    },
+                ],
+            }
+        ],
+    )
+
+    usage = response.usage
+    print(
+        f"Tokens used — input: {usage.input_tokens}, output: {usage.output_tokens}"
+    )
+
+    for block in response.content:
+        if block.type == "tool_use":
+            return block.input
+    raise ExtractionError("Claude's response did not include a tool call.")
+
+
+def extract_invoice(
+    path: str | Path, client: anthropic.Anthropic | None = None
+) -> ExtractedInvoice:
+    path = Path(path)
+    if not path.exists():
+        raise ExtractionError(f"File not found: {path}")
+
+    client = client or _default_client()
+    file_bytes = path.read_bytes()
+    content_blocks = _content_blocks_for(path, file_bytes)
+
+    try:
+        raw = _call_model(client, content_blocks)
+    except anthropic.APIStatusError as error:
+        if path.suffix.lower() == ".pdf" and error.status_code == 400:
+            print(
+                "Claude rejected this PDF directly — rendering its pages "
+                "as images with pymupdf instead."
+            )
+            content_blocks = _pdf_pages_to_image_blocks(path)
+            raw = _call_model(client, content_blocks)
+        else:
+            raise
+
+    try:
+        return ExtractedInvoice.model_validate(raw)
+    except ValidationError:
+        raw = _call_model(client, content_blocks)
+        try:
+            return ExtractedInvoice.model_validate(raw)
+        except ValidationError as second_error:
+            raise ExtractionError(
+                f"Claude's response for {path.name} did not match the "
+                f"expected schema, even after retrying once: {second_error}"
+            ) from second_error
