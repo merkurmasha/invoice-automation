@@ -9,10 +9,12 @@ have to parse ourselves.
 
 from __future__ import annotations
 
+import argparse
 import base64
 import hashlib
 import json
 import os
+import sys
 from pathlib import Path
 
 import anthropic
@@ -260,3 +262,24 @@ def extract_invoice(
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     cache_path.write_text(json.dumps(raw, indent=2))
     return parsed
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Extract structured data from an invoice, receipt, or credit note."
+    )
+    parser.add_argument("path", help="Path to a PDF or JPG file")
+    args = parser.parse_args(argv)
+
+    try:
+        result = extract_invoice(args.path)
+    except ExtractionError as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+
+    print(json.dumps(result.model_dump(mode="json"), indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
