@@ -21,6 +21,15 @@ one bank line that turned out to be several invoices paid at once is
 still worth a human's attention, even though match.py applied it
 confidently - this isn't one of CLAUDE.md's required lists, just extra
 visibility that doesn't cost anything to add.
+
+Every row also carries `direction` (payable/receivable), so a human
+skimming the CSV doesn't have to guess which side of the ledger a row
+is about. Bank-line rows (unmatched/ambiguous/possible/combo) carry
+`bank_date` - the date on the bank statement - and leave `due_date`
+blank unless they point at exactly one invoice, in which case that
+invoice's due date is filled in too. Obligation rows (no_payment_*/
+partial_payment_balance) carry `due_date` and leave `bank_date` blank,
+since there's no single bank line for them to point at.
 """
 
 from __future__ import annotations
@@ -30,7 +39,7 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
-from .ledger import Obligation
+from .ledger import PAYABLE, RECEIVABLE, Obligation
 from .match import MatchDecision
 
 UNMATCHED_BANK_LINE = "unmatched_bank_line"
@@ -43,7 +52,9 @@ COMBO_PAYMENT = "combo_payment"
 
 FIELDNAMES = [
     "category",
-    "date",
+    "direction",
+    "bank_date",
+    "due_date",
     "invoice_numbers",
     "counterparty",
     "currency",
@@ -56,7 +67,9 @@ FIELDNAMES = [
 @dataclass(frozen=True)
 class ExceptionRow:
     category: str
-    date: date | None
+    direction: str  # PAYABLE or RECEIVABLE (see ledger.py)
+    bank_date: date | None
+    due_date: date | None
     invoice_numbers: list[str]
     counterparty: str
     currency: str
@@ -67,7 +80,9 @@ class ExceptionRow:
     def to_row(self) -> dict:
         return {
             "category": self.category,
-            "date": self.date.isoformat() if self.date else "",
+            "direction": self.direction,
+            "bank_date": self.bank_date.isoformat() if self.bank_date else "",
+            "due_date": self.due_date.isoformat() if self.due_date else "",
             "invoice_numbers": "|".join(self.invoice_numbers),
             "counterparty": self.counterparty,
             "currency": self.currency,
@@ -77,7 +92,7 @@ class ExceptionRow:
         }
 
 
-def _decision_rows(decisions: list[MatchDecision]) -> list[ExceptionRow]:
+def _decision_rows(decisions: list[MatchDecision], obligations_by_invoice: dict[str, Obligation]) -> list[ExceptionRow]:
     rows: list[ExceptionRow] = []
     for decision in decisions:
         line = decision.bank_line
@@ -95,10 +110,20 @@ def _decision_rows(decisions: list[MatchDecision]) -> list[ExceptionRow]:
             # invoice's remaining balance; auto needs no exception at all).
             continue
 
+        # Only filled in when the line points at exactly one invoice -
+        # ambiguous/combo rows name more than one, so there's no single
+        # due date to show without implying one is more "right".
+        due_date = None
+        if len(decision.invoice_numbers) == 1:
+            matched = obligations_by_invoice.get(decision.invoice_numbers[0])
+            due_date = matched.due_date if matched is not None else None
+
         rows.append(
             ExceptionRow(
                 category=category,
-                date=line.txn_date,
+                direction=PAYABLE if line.amount < 0 else RECEIVABLE,
+                bank_date=line.txn_date,
+                due_date=due_date,
                 invoice_numbers=decision.invoice_numbers,
                 counterparty=line.description,
                 currency="EUR",
@@ -110,7 +135,26 @@ def _decision_rows(decisions: list[MatchDecision]) -> list[ExceptionRow]:
     return rows
 
 
-def _obligation_rows(obligations: list[Obligation], today: date) -> list[ExceptionRow]:
+def _best_possible_match_for(
+    invoice_number: str, decisions: list[MatchDecision]
+) -> MatchDecision | None:
+    """The best-scoring "possible" decision that points at exactly this
+    invoice, if any - used to soften a no_payment_overdue row's reason
+    when a payment has in fact been *found*, just not confidently
+    enough to apply automatically."""
+    candidates = [
+        d
+        for d in decisions
+        if d.category == "possible" and d.invoice_numbers == [invoice_number]
+    ]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda d: d.score or 0.0)
+
+
+def _obligation_rows(
+    obligations: list[Obligation], today: date, decisions: list[MatchDecision]
+) -> list[ExceptionRow]:
     rows: list[ExceptionRow] = []
     for ob in obligations:
         if ob.amount_paid <= 0:
@@ -118,7 +162,9 @@ def _obligation_rows(obligations: list[Obligation], today: date) -> list[Excepti
                 rows.append(
                     ExceptionRow(
                         category=NO_PAYMENT_NOT_YET_DUE,
-                        date=None,
+                        direction=ob.kind,
+                        bank_date=None,
+                        due_date=None,
                         invoice_numbers=[ob.invoice_number],
                         counterparty=ob.counterparty,
                         currency=ob.currency,
@@ -132,7 +178,9 @@ def _obligation_rows(obligations: list[Obligation], today: date) -> list[Excepti
                 rows.append(
                     ExceptionRow(
                         category=NO_PAYMENT_NOT_YET_DUE,
-                        date=ob.due_date,
+                        direction=ob.kind,
+                        bank_date=None,
+                        due_date=ob.due_date,
                         invoice_numbers=[ob.invoice_number],
                         counterparty=ob.counterparty,
                         currency=ob.currency,
@@ -143,23 +191,32 @@ def _obligation_rows(obligations: list[Obligation], today: date) -> list[Excepti
                 )
             else:
                 days = (today - ob.due_date).days
+                possible = _best_possible_match_for(ob.invoice_number, decisions)
+                if possible is not None:
+                    reason = f"Possible payment found (score {possible.score:.0f}), needs confirming."
+                else:
+                    reason = f"No payment seen; {days} day(s) overdue as of {today.isoformat()}."
                 rows.append(
                     ExceptionRow(
                         category=NO_PAYMENT_OVERDUE,
-                        date=ob.due_date,
+                        direction=ob.kind,
+                        bank_date=None,
+                        due_date=ob.due_date,
                         invoice_numbers=[ob.invoice_number],
                         counterparty=ob.counterparty,
                         currency=ob.currency,
                         amount=ob.total,
                         outstanding=ob.amount_outstanding,
-                        reason=f"No payment seen; {days} day(s) overdue as of {today.isoformat()}.",
+                        reason=reason,
                     )
                 )
         elif ob.amount_outstanding > 0:
             rows.append(
                 ExceptionRow(
                     category=PARTIAL_PAYMENT_BALANCE,
-                    date=ob.due_date,
+                    direction=ob.kind,
+                    bank_date=None,
+                    due_date=ob.due_date,
                     invoice_numbers=[ob.invoice_number],
                     counterparty=ob.counterparty,
                     currency=ob.currency,
@@ -181,7 +238,8 @@ def build_exceptions(
 ) -> list[ExceptionRow]:
     """Builds the full exceptions list. Must be called AFTER
     match.reconcile() has run (so obligations reflect applied payments)."""
-    return _decision_rows(decisions) + _obligation_rows(obligations, today)
+    obligations_by_invoice = {ob.invoice_number: ob for ob in obligations}
+    return _decision_rows(decisions, obligations_by_invoice) + _obligation_rows(obligations, today, decisions)
 
 
 def write_exceptions_csv(rows: list[ExceptionRow], path: str | Path) -> None:
