@@ -1,0 +1,218 @@
+{
+  "name": "Invoice intake",
+  "nodes": [
+    {
+      "id": "92a0b014-cfc4-45d2-9fe4-4b27f658e403",
+      "name": "Watch Invoices-Inbox",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [-640, 0],
+      "parameters": {
+        "pollTimes": { "item": [{ "mode": "everyMinute" }] },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "Invoices-Inbox"
+        },
+        "event": "fileCreated"
+      },
+      "credentials": {
+        "googleDriveOAuth2Api": { "id": "", "name": "Google Drive account" }
+      }
+    },
+    {
+      "id": "e69b6967-a006-4924-a0f1-05d3b865b75b",
+      "name": "Download file",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [-420, 0],
+      "parameters": {
+        "resource": "file",
+        "operation": "download",
+        "fileId": { "__rl": true, "mode": "id", "value": "={{ $json.id }}" },
+        "options": {}
+      },
+      "credentials": {
+        "googleDriveOAuth2Api": { "id": "", "name": "Google Drive account" }
+      }
+    },
+    {
+      "id": "88e50879-64a8-4ac7-b1ac-322d0013754d",
+      "name": "Write to temp folder",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [-200, 0],
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ '/tmp/invoice-automation-inbox/' + $json.name }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "c298b286-2d78-4a53-9e71-9279abdcd55c",
+      "name": "Run process_invoice.py",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [20, 0],
+      "parameters": {
+        "command": "={{ 'cd ' + $env.INVOICE_AUTOMATION_REPO + ' && .venv/bin/python -m scripts.process_invoice ' + $json.fileName }}"
+      }
+    },
+    {
+      "id": "bb4580e6-eb3b-4303-8d6b-dd1a19551298",
+      "name": "Parse result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0],
+      "parameters": {
+        "jsCode": "const parsed = JSON.parse($input.item.json.stdout);\nconst driveFile = $('Watch Invoices-Inbox').item.json;\nreturn [{ json: { ...parsed, drive_file_id: driveFile.id, drive_file_name: driveFile.name } }];"
+      }
+    },
+    {
+      "id": "9d15cb9c-007a-4b71-b106-4b0b73e776e6",
+      "name": "Status is pass?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 0],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "ba3d52fa-c0a0-40d9-b375-0a4f173f3df9",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "pass",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a6440a90-fb6f-43dc-909e-d5b910a264bc",
+      "name": "Rename + move to processed",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [700, -120],
+      "parameters": {
+        "resource": "file",
+        "operation": "move",
+        "fileId": { "__rl": true, "mode": "id", "value": "={{ $json.drive_file_id }}" },
+        "driveId": { "__rl": true, "mode": "list", "value": "My Drive", "cachedResultName": "My Drive" },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "Invoices-Processed"
+        },
+        "options": {
+          "fileName": "={{ $json.standardised_filename }}"
+        }
+      },
+      "credentials": {
+        "googleDriveOAuth2Api": { "id": "", "name": "Google Drive account" }
+      }
+    },
+    {
+      "id": "f3f0fc57-70b9-45d7-b07c-7e702e40aa65",
+      "name": "Append to Ledger",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [940, -120],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "append",
+        "documentId": { "__rl": true, "mode": "list", "value": "", "cachedResultName": "Invoice Automation" },
+        "sheetName": { "__rl": true, "mode": "list", "value": "", "cachedResultName": "Ledger" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $json.extraction.issue_date }}",
+            "Supplier": "={{ $json.supplier_match.canonical_name }}",
+            "Invoice Number": "={{ $json.extraction.invoice_number }}",
+            "Category": "={{ $json.category ? $json.category.category_code : '' }}",
+            "Standardised Filename": "={{ $json.standardised_filename }}",
+            "Drive Subfolder": "={{ $json.drive_subfolder }}",
+            "Original File": "={{ $json.drive_file_name }}",
+            "Status": "={{ $json.status }}"
+          }
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": { "id": "", "name": "Google Sheets account" }
+      }
+    },
+    {
+      "id": "cde90484-628e-40ac-bbe0-03619569f122",
+      "name": "Move to review",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [700, 120],
+      "parameters": {
+        "resource": "file",
+        "operation": "move",
+        "fileId": { "__rl": true, "mode": "id", "value": "={{ $json.drive_file_id }}" },
+        "driveId": { "__rl": true, "mode": "list", "value": "My Drive", "cachedResultName": "My Drive" },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "Invoices-Review"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleDriveOAuth2Api": { "id": "", "name": "Google Drive account" }
+      }
+    },
+    {
+      "id": "aec5686f-f19f-45c8-9572-4dd15e98f3ed",
+      "name": "Append to Review queue",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [940, 120],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "append",
+        "documentId": { "__rl": true, "mode": "list", "value": "", "cachedResultName": "Invoice Automation" },
+        "sheetName": { "__rl": true, "mode": "list", "value": "", "cachedResultName": "Review queue" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $now.toISODate() }}",
+            "Original File": "={{ $json.drive_file_name }}",
+            "Status": "={{ $json.status }}",
+            "Reasons": "={{ ($json.review_reasons || []).join('; ') }}",
+            "Error": "={{ $json.error || '' }}"
+          }
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": { "id": "", "name": "Google Sheets account" }
+      }
+    }
+  ],
+  "connections": {
+    "Watch Invoices-Inbox": { "main": [[{ "node": "Download file", "type": "main", "index": 0 }]] },
+    "Download file": { "main": [[{ "node": "Write to temp folder", "type": "main", "index": 0 }]] },
+    "Write to temp folder": { "main": [[{ "node": "Run process_invoice.py", "type": "main", "index": 0 }]] },
+    "Run process_invoice.py": { "main": [[{ "node": "Parse result", "type": "main", "index": 0 }]] },
+    "Parse result": { "main": [[{ "node": "Status is pass?", "type": "main", "index": 0 }]] },
+    "Status is pass?": {
+      "main": [
+        [{ "node": "Rename + move to processed", "type": "main", "index": 0 }],
+        [{ "node": "Move to review", "type": "main", "index": 0 }]
+      ]
+    },
+    "Rename + move to processed": { "main": [[{ "node": "Append to Ledger", "type": "main", "index": 0 }]] },
+    "Move to review": { "main": [[{ "node": "Append to Review queue", "type": "main", "index": 0 }]] }
+  },
+  "pinData": {},
+  "settings": { "executionOrder": "v1" }
+}
