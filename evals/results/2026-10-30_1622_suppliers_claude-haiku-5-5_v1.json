@@ -1,0 +1,660 @@
+{
+  "model": "claude-haiku-5-5",
+  "prompt_version": "v1",
+  "dataset": "synthetic",
+  "timestamp": "2026-10-30_1622",
+  "usage": {
+    "input": 10942,
+    "output": 1073
+  },
+  "match_status_tally": {
+    "new": 17,
+    "exact": 26,
+    "fuzzy_merge": 1,
+    "possible_match": 2
+  },
+  "missed_merges": {},
+  "false_merges": {},
+  "category_accuracy": {
+    "correct": 40,
+    "total": 46
+  },
+  "category_scores": [
+    {
+      "file": "invoices/accounting_2026-10-10.pdf",
+      "supplier": "Assessoria Fiscal Puig & Associats",
+      "expected": "accounting_legal",
+      "actual": "accounting_legal",
+      "confidence": 0.85,
+      "correct": true
+    },
+    {
+      "file": "invoices/adobe_2026-07-05.pdf",
+      "supplier": "Adobe Inc.",
+      "expected": "software_subscriptions",
+      "actual": "software_subscriptions",
+      "confidence": 0.9,
+      "correct": true
+    },
+    {
+      "file": "invoices/adobe_2026-08-05.pdf",
+      "supplier": "Adobe Inc.",
+      "expected": "software_subscriptions",
+      "actual": "software_subscriptions",
+      "confidence": 0.9,
+      "correct": true
+    },
+    {
+      "file": "invoices/adobe_2026-09-05.pdf",
+      "supplier": "ADOBE SYSTEMS SOFTWARE IRELAND LTD",
+      "expected": "software_subscriptions",
+      "actual": "software_subscriptions",
+      "confidence": 0.95,
+      "correct": true
+    },
+    {
+      "file": "invoices/adobe_2026-10-05.pdf",
+      "supplier": "Adobe Inc.",
+      "expected": "software_subscriptions",
+      "actual": "software_subscriptions",
+      "confidence": 0.9,
+      "correct": true
+    },
+    {
+      "file": "invoices/adobe_2026-10-15.pdf",
+      "supplier": "Adobe Inc.",
+      "expected": "software_subscriptions",
+      "actual": "software_subscriptions",
+      "confidence": 0.9,
+      "correct": true
+    },
+    {
+      "file": "invoices/catering_2026-09-18.pdf",
+      "supplier": "Caf\u00e9 Central",
+      "expected": "meals_entertainment",
+      "actual": "meals_entertainment",
+      "confidence": 0.6,
+      "correct": true
+    },
+    {
+      "file": "invoices/cloudhost_2026-07-08.pdf",
+      "supplier": "CloudHost Barcelona, S.L.",
+      "expected": "software_subscriptions",
+      "actual": "software_subscriptions",
+      "confidence": 0.7,
+      "correct": true
+    },
+    {
+      "file": "invoices/courier_2026-08-14.pdf",
+      "supplier": "Missatgeria Girona, S.L.",
+      "expected": "shipping_courier",
+      "actual": "other",
+      "confidence": 0.2,
+      "correct": false
+    },
+    {
+      "file": "invoices/coworking_2026-07-01.pdf",
+      "supplier": "Barcelona Working Hub, S.L.",
+      "expected": "rent_coworking",
+      "actual": "rent_coworking",
+      "confidence": 0.85,
+      "correct": true
+    },
+    {
+      "file": "invoices/coworking_2026-08-01.pdf",
+      "supplier": "Barcelona Working Hub, S.L.",
+      "expected": "rent_coworking",
+      "actual": "rent_coworking",
+      "confidence": 0.85,
+      "correct": true
+    },
+    {
+      "file": "invoices/coworking_2026-09-01.pdf",
+      "supplier": "Barcelona Working Hub, S.L.",
+      "expected": "rent_coworking",
+      "actual": "rent_coworking",
+      "confidence": 0.85,
+      "correct": true
+    },
+    {
+      "file": "invoices/coworking_2026-09-01_near.pdf",
+      "supplier": "Barcelona Working Hub, S.L.",
+      "expected": "rent_coworking",
+      "actual": "rent_coworking",
+      "confidence": 0.85,
+      "correct": true
+    },
+    {
+      "file": "invoices/coworking_2026-10-01.pdf",
+      "supplier": "Barcelona Working Hub, S.L.",
+      "expected": "rent_coworking",
+      "actual": "rent_coworking",
+      "confidence": 0.85,
+      "correct": true
+    },
+    {
+      "file": "invoices/electricity_2026-07-10.pdf",
+      "supplier": "Energia Costa Brava, S.L.",
+      "expected": "utilities",
+      "actual": "utilities",
+      "confidence": 0.6,
+      "correct": true
+    },
+    {
+      "file": "invoices/electricity_2026-08-10.pdf",
+      "supplier": "Energia Costa Brava, S.L.",
+      "expected": "utilities",
+      "actual": "utilities",
+      "confidence": 0.6,
+      "correct": true
+    },
+    {
+      "file": "invoices/electricity_2026-08-10_dup.pdf",
+      "supplier": "Energia Costa Brava, S.L.",
+      "expected": "utilities",
+      "actual": "utilities",
+      "confidence": 0.6,
+      "correct": true
+    },
+    {
+      "file": "invoices/electricity_2026-09-10.pdf",
+      "supplier": "Energia Costa Brava, S.L.",
+      "expected": "utilities",
+      "actual": "utilities",
+      "confidence": 0.6,
+      "correct": true
+    },
+    {
+      "file": "invoices/electricity_2026-10-10.pdf",
+      "supplier": "Energia Costa Brava, S.L.",
+      "expected": "utilities",
+      "actual": "utilities",
+      "confidence": 0.6,
+      "correct": true
+    },
+    {
+      "file": "invoices/figma_2026-07-12.pdf",
+      "supplier": "Figma, Inc.",
+      "expected": "software_subscriptions",
+      "actual": "software_subscriptions",
+      "confidence": 0.95,
+      "correct": true
+    },
+    {
+      "file": "invoices/figma_2026-09-12.pdf",
+      "supplier": "Figma, Inc.",
+      "expected": "software_subscriptions",
+      "actual": "software_subscriptions",
+      "confidence": 0.95,
+      "correct": true
+    },
+    {
+      "file": "invoices/freelancer_2026-07-20.pdf",
+      "supplier": "Jordi Soler Fotografia",
+      "expected": "professional_services",
+      "actual": "professional_services",
+      "confidence": 0.7,
+      "correct": true
+    },
+    {
+      "file": "invoices/freelancer_2026-09-22.pdf",
+      "supplier": "Jordi Soler Fotografia",
+      "expected": "professional_services",
+      "actual": "professional_services",
+      "confidence": 0.7,
+      "correct": true
+    },
+    {
+      "file": "invoices/furniture_2026-08-25.pdf",
+      "supplier": "Mobles Office BCN, S.L.",
+      "expected": "office_supplies_furniture",
+      "actual": "office_supplies_furniture",
+      "confidence": 0.6,
+      "correct": true
+    },
+    {
+      "file": "invoices/insurance_2026-07-30.pdf",
+      "supplier": "Assegurances Costa Brava, S.L.",
+      "expected": "insurance",
+      "actual": "insurance",
+      "confidence": 0.8,
+      "correct": true
+    },
+    {
+      "file": "invoices/internet_2026-07-15.pdf",
+      "supplier": "Fibra Catalana, S.L.",
+      "expected": "utilities",
+      "actual": "other",
+      "confidence": 0.2,
+      "correct": false
+    },
+    {
+      "file": "invoices/internet_2026-08-15.pdf",
+      "supplier": "Fibra Catalana, S.L.",
+      "expected": "utilities",
+      "actual": "other",
+      "confidence": 0.2,
+      "correct": false
+    },
+    {
+      "file": "invoices/internet_2026-09-15.pdf",
+      "supplier": "Fibra Catalana, S.L.",
+      "expected": "utilities",
+      "actual": "other",
+      "confidence": 0.2,
+      "correct": false
+    },
+    {
+      "file": "invoices/internet_2026-10-15.pdf",
+      "supplier": "Fibra Catalana, S.L.",
+      "expected": "utilities",
+      "actual": "other",
+      "confidence": 0.2,
+      "correct": false
+    },
+    {
+      "file": "invoices/nordic_2026-08-01.pdf",
+      "supplier": "Nordic Design Tools GmbH",
+      "expected": "software_subscriptions",
+      "actual": "software_subscriptions",
+      "confidence": 0.6,
+      "correct": true
+    },
+    {
+      "file": "invoices/notion_2026-07-03.pdf",
+      "supplier": "Notion Labs Inc",
+      "expected": "software_subscriptions",
+      "actual": "software_subscriptions",
+      "confidence": 0.95,
+      "correct": true
+    },
+    {
+      "file": "invoices/notion_2026-08-03.pdf",
+      "supplier": "NOTION LABS",
+      "expected": "software_subscriptions",
+      "actual": "software_subscriptions",
+      "confidence": 0.9,
+      "correct": true
+    },
+    {
+      "file": "invoices/notion_2026-09-03.pdf",
+      "supplier": "Notion Labs, Inc",
+      "expected": "software_subscriptions",
+      "actual": "software_subscriptions",
+      "confidence": 0.95,
+      "correct": true
+    },
+    {
+      "file": "invoices/notion_2026-10-03.pdf",
+      "supplier": "Notion Labs, Inc.",
+      "expected": "software_subscriptions",
+      "actual": "software_subscriptions",
+      "confidence": 0.95,
+      "correct": true
+    },
+    {
+      "file": "invoices/officesupplies_2026-10-02.pdf",
+      "supplier": "Toner & Papereria Girona",
+      "expected": "office_supplies_furniture",
+      "actual": "office_supplies_furniture",
+      "confidence": 0.8,
+      "correct": true
+    },
+    {
+      "file": "invoices/pixelco_2026-09-25.pdf",
+      "supplier": "Pixel & Co Design Ltd",
+      "expected": "professional_services",
+      "actual": "professional_services",
+      "confidence": 0.5,
+      "correct": true
+    },
+    {
+      "file": "invoices/printer_2026-08-18.pdf",
+      "supplier": "Impremta Girona, S.L.",
+      "expected": "printing_marketing",
+      "actual": "printing_marketing",
+      "confidence": 0.7,
+      "correct": true
+    },
+    {
+      "file": "invoices/printer_2026-10-06.pdf",
+      "supplier": "Impremta Girona, S.L.",
+      "expected": "printing_marketing",
+      "actual": "printing_marketing",
+      "confidence": 0.7,
+      "correct": true
+    },
+    {
+      "file": "invoices/studiofonts_2026-09-09.pdf",
+      "supplier": "Studio Fonts France SARL",
+      "expected": "software_subscriptions",
+      "actual": "software_subscriptions",
+      "confidence": 0.45,
+      "correct": true
+    },
+    {
+      "file": "invoices/travel_2026-10-20.pdf",
+      "supplier": "Viatges Business, S.L.",
+      "expected": "travel",
+      "actual": "travel",
+      "confidence": 0.5,
+      "correct": true
+    },
+    {
+      "file": "photos/coworking_2026-07-01.jpg",
+      "supplier": "Barcelona Working Hub, S.L.",
+      "expected": "rent_coworking",
+      "actual": "rent_coworking",
+      "confidence": 0.85,
+      "correct": true
+    },
+    {
+      "file": "photos/freelancer_2026-07-20.jpg",
+      "supplier": "Jordi Soler Fotografia",
+      "expected": "professional_services",
+      "actual": "professional_services",
+      "confidence": 0.7,
+      "correct": true
+    },
+    {
+      "file": "photos/internet_2026-10-15.jpg",
+      "supplier": "Fibra Catalana, S.L.",
+      "expected": "utilities",
+      "actual": "other",
+      "confidence": 0.2,
+      "correct": false
+    },
+    {
+      "file": "photos/notion_2026-08-03.jpg",
+      "supplier": "NOTION LABS",
+      "expected": "software_subscriptions",
+      "actual": "software_subscriptions",
+      "confidence": 0.9,
+      "correct": true
+    },
+    {
+      "file": "photos/pixelco_2026-09-25.jpg",
+      "supplier": "Pixel & Co Design Ltd",
+      "expected": "professional_services",
+      "actual": "professional_services",
+      "confidence": 0.5,
+      "correct": true
+    },
+    {
+      "file": "photos/studiofonts_2026-09-09.jpg",
+      "supplier": "Studio Fonts France SARL",
+      "expected": "software_subscriptions",
+      "actual": "software_subscriptions",
+      "confidence": 0.45,
+      "correct": true
+    }
+  ],
+  "confidently_wrong": [],
+  "review_queue_count": 44,
+  "review_queue_items": [
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/accounting_2026-10-10.pdf",
+      "reason": "no match above review threshold for printed name 'Assessoria Fiscal Puig & Associats'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/adobe_2026-07-05.pdf",
+      "reason": "no match above review threshold for printed name 'Adobe Inc.'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/catering_2026-09-18.pdf",
+      "reason": "no match above review threshold for printed name 'Caf\u00e9 Central'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/catering_2026-09-18.pdf",
+      "reason": "category 'meals_entertainment' confidence 0.60 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/cloudhost_2026-07-08.pdf",
+      "reason": "no match above review threshold for printed name 'CloudHost Barcelona, S.L.'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/cloudhost_2026-07-08.pdf",
+      "reason": "category 'software_subscriptions' confidence 0.70 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/courier_2026-08-14.pdf",
+      "reason": "no match above review threshold for printed name 'Missatgeria Girona, S.L.'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/courier_2026-08-14.pdf",
+      "reason": "category 'other' confidence 0.20 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/coworking_2026-07-01.pdf",
+      "reason": "no match above review threshold for printed name 'Barcelona Working Hub, S.L.'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/electricity_2026-07-10.pdf",
+      "reason": "no match above review threshold for printed name 'Energia Costa Brava, S.L.'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/electricity_2026-07-10.pdf",
+      "reason": "category 'utilities' confidence 0.60 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/electricity_2026-08-10.pdf",
+      "reason": "category 'utilities' confidence 0.60 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/electricity_2026-08-10_dup.pdf",
+      "reason": "category 'utilities' confidence 0.60 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/electricity_2026-09-10.pdf",
+      "reason": "category 'utilities' confidence 0.60 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/electricity_2026-10-10.pdf",
+      "reason": "category 'utilities' confidence 0.60 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/figma_2026-07-12.pdf",
+      "reason": "no match above review threshold for printed name 'Figma, Inc.'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/freelancer_2026-07-20.pdf",
+      "reason": "no match above review threshold for printed name 'Jordi Soler Fotografia'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/freelancer_2026-07-20.pdf",
+      "reason": "category 'professional_services' confidence 0.70 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/freelancer_2026-09-22.pdf",
+      "reason": "category 'professional_services' confidence 0.70 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/furniture_2026-08-25.pdf",
+      "reason": "no match above review threshold for printed name 'Mobles Office BCN, S.L.'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/furniture_2026-08-25.pdf",
+      "reason": "category 'office_supplies_furniture' confidence 0.60 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/insurance_2026-07-30.pdf",
+      "reason": "no match above review threshold for printed name 'Assegurances Costa Brava, S.L.'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/internet_2026-07-15.pdf",
+      "reason": "no match above review threshold for printed name 'Fibra Catalana, S.L.'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/internet_2026-07-15.pdf",
+      "reason": "category 'other' confidence 0.20 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/internet_2026-08-15.pdf",
+      "reason": "category 'other' confidence 0.20 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/internet_2026-09-15.pdf",
+      "reason": "category 'other' confidence 0.20 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/internet_2026-10-15.pdf",
+      "reason": "category 'other' confidence 0.20 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/nordic_2026-08-01.pdf",
+      "reason": "no match above review threshold for printed name 'Nordic Design Tools GmbH'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/nordic_2026-08-01.pdf",
+      "reason": "category 'software_subscriptions' confidence 0.60 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/notion_2026-07-03.pdf",
+      "reason": "no match above review threshold for printed name 'Notion Labs Inc'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/officesupplies_2026-10-02.pdf",
+      "reason": "no match above review threshold for printed name 'Toner & Papereria Girona'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "possible_match",
+      "file": "invoices/pixelco_2026-09-25.pdf",
+      "reason": "'Pixel & Co Design Ltd' ~ 'Assessoria Fiscal Puig & Associats' (score 85.5)",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/pixelco_2026-09-25.pdf",
+      "reason": "category 'professional_services' confidence 0.50 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "possible_match",
+      "file": "invoices/printer_2026-08-18.pdf",
+      "reason": "'Impremta Girona, S.L.' ~ 'Toner & Papereria Girona' (score 85.5)",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/printer_2026-08-18.pdf",
+      "reason": "category 'printing_marketing' confidence 0.70 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/printer_2026-10-06.pdf",
+      "reason": "category 'printing_marketing' confidence 0.70 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/studiofonts_2026-09-09.pdf",
+      "reason": "no match above review threshold for printed name 'Studio Fonts France SARL'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/studiofonts_2026-09-09.pdf",
+      "reason": "category 'software_subscriptions' confidence 0.45 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/travel_2026-10-20.pdf",
+      "reason": "no match above review threshold for printed name 'Viatges Business, S.L.'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/travel_2026-10-20.pdf",
+      "reason": "category 'travel' confidence 0.50 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "photos/freelancer_2026-07-20.jpg",
+      "reason": "category 'professional_services' confidence 0.70 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "photos/internet_2026-10-15.jpg",
+      "reason": "category 'other' confidence 0.20 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "photos/pixelco_2026-09-25.jpg",
+      "reason": "category 'professional_services' confidence 0.50 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "photos/studiofonts_2026-09-09.jpg",
+      "reason": "category 'software_subscriptions' confidence 0.45 below threshold",
+      "date": "2026-10-30"
+    }
+  ]
+}
