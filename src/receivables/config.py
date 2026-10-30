@@ -13,7 +13,9 @@ DRAFT_MODEL = "claude-haiku-5-5"
 
 # Bumped whenever the system prompt in draft.py changes meaningfully.
 # Part of the cache key, so a prompt change naturally misses the cache.
-DRAFT_PROMPT_VERSION = "v1"
+# v2: dropped the stage-3 "escalated internally" phrasing, added the
+# previous_reminders_sent gate, and added the forbidden-terms rule.
+DRAFT_PROMPT_VERSION = "v2"
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 

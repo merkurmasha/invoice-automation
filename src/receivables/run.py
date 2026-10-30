@@ -74,7 +74,9 @@ def main(argv: list[str] | None = None) -> int:
     uncached = [
         item
         for item in due
-        if not draft.is_cached(tracker.invoices[item.invoice_id], item.stage, DRAFT_MODEL)
+        if not draft.is_cached(
+            tracker.invoices[item.invoice_id], item.stage, DRAFT_MODEL, log_path=args.log_path
+        )
     ]
     print()
     if uncached:
@@ -92,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
     print()
     for item in due:
         invoice = tracker.invoices[item.invoice_id]
-        result = draft.draft_reminder(invoice, item.stage, today=today)
+        result = draft.draft_reminder(invoice, item.stage, today=today, log_path=args.log_path)
         schedule.record_drafted(item.invoice_id, item.stage, today, log_path=args.log_path)
         flag = " [NEEDS REVIEW]" if result.needs_review else ""
         print(f"  - wrote {result.path}{flag}")
