@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-10-30_1731",
+  "total_lines": 37,
+  "real_matches_expected": 36,
+  "decision_categories": {
+    "auto": 29,
+    "partial": 3,
+    "possible": 4,
+    "unmatched": 1
+  },
+  "correctly_matched_count": 36,
+  "false_matches": [],
+  "missed_matches": [],
+  "partials_detected": [
+    "2026/011",
+    "IG-00501",
+    "CBS-2026-0005"
+  ],
+  "partials_missed": [],
+  "unmatched_line_found": true,
+  "ambiguous": []
+}
