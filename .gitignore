@@ -225,5 +225,6 @@ data/cache/
 data/review_queue.csv
 data/reminder_log.csv
 data/drafts/
+data/reconcile/
 evals/results/*.tmp
 .DS_Store
