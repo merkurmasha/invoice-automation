@@ -222,5 +222,6 @@ __marimo__/
 
 # Project-specific
 data/cache/
+data/review_queue.csv
 evals/results/*.tmp
 .DS_Store

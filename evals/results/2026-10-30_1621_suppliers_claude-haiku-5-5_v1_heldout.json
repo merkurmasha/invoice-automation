@@ -1,0 +1,305 @@
+{
+  "model": "claude-haiku-5-5",
+  "prompt_version": "v1",
+  "dataset": "heldout",
+  "timestamp": "2026-10-30_1621",
+  "usage": {
+    "input": 19189,
+    "output": 2029
+  },
+  "match_status_tally": {
+    "new": 14
+  },
+  "missed_merges": {},
+  "false_merges": {},
+  "category_accuracy": {
+    "correct": 9,
+    "total": 14
+  },
+  "category_scores": [
+    {
+      "file": "invoices/heldout_credit_note_es.pdf",
+      "supplier": "Suministros Garrotxa, S.L.",
+      "expected": "office_supplies_furniture",
+      "actual": "other",
+      "confidence": 0.2,
+      "correct": false
+    },
+    {
+      "file": "invoices/heldout_european_numbers.pdf",
+      "supplier": "Maquin\u00e0ria Industrial Girona, S.L.",
+      "expected": "other",
+      "actual": "other",
+      "confidence": 0.2,
+      "correct": true
+    },
+    {
+      "file": "invoices/heldout_handwritten_note.pdf",
+      "supplier": "Cafeteria Pont Vell",
+      "expected": "meals_entertainment",
+      "actual": "meals_entertainment",
+      "confidence": 0.6,
+      "correct": true
+    },
+    {
+      "file": "invoices/heldout_multi_page.pdf",
+      "supplier": "Meridian Consulting Group, S.L.",
+      "expected": "professional_services",
+      "actual": "professional_services",
+      "confidence": 0.4,
+      "correct": true
+    },
+    {
+      "file": "invoices/heldout_multiple_vat_rates.pdf",
+      "supplier": "Esdeveniments Girona, S.L.",
+      "expected": "professional_services",
+      "actual": "other",
+      "confidence": 0.2,
+      "correct": false
+    },
+    {
+      "file": "invoices/heldout_no_invoice_number.pdf",
+      "supplier": "Quiosc La Rambla",
+      "expected": "meals_entertainment",
+      "actual": "other",
+      "confidence": 0.2,
+      "correct": false
+    },
+    {
+      "file": "invoices/heldout_tax_inclusive.pdf",
+      "supplier": "Taller Cer\u00e0mic Girona",
+      "expected": "office_supplies_furniture",
+      "actual": "other",
+      "confidence": 0.3,
+      "correct": false
+    },
+    {
+      "file": "invoices/heldout_two_column_layout.pdf",
+      "supplier": "Decoracions Bages, S.L.",
+      "expected": "other",
+      "actual": "other",
+      "confidence": 0.2,
+      "correct": true
+    },
+    {
+      "file": "invoices/heldout_us_date.pdf",
+      "supplier": "Bay Area Dev Tools Inc",
+      "expected": "software_subscriptions",
+      "actual": "software_subscriptions",
+      "confidence": 0.6,
+      "correct": true
+    },
+    {
+      "file": "invoices/heldout_usd_with_symbol_variants.pdf",
+      "supplier": "Pacific Grove Software LLC",
+      "expected": "software_subscriptions",
+      "actual": "software_subscriptions",
+      "confidence": 0.7,
+      "correct": true
+    },
+    {
+      "file": "invoices/heldout_written_month_ca.pdf",
+      "supplier": "Vivers Can Bruguera",
+      "expected": "other",
+      "actual": "other",
+      "confidence": 0.2,
+      "correct": true
+    },
+    {
+      "file": "invoices/heldout_written_month_en.pdf",
+      "supplier": "Thistle & Co Design Studio",
+      "expected": "professional_services",
+      "actual": "professional_services",
+      "confidence": 0.4,
+      "correct": true
+    },
+    {
+      "file": "invoices/heldout_written_month_es.pdf",
+      "supplier": "Taller de Encuadernaci\u00f3n Mart\u00ed, S.L.",
+      "expected": "printing_marketing",
+      "actual": "printing_marketing",
+      "confidence": 0.5,
+      "correct": true
+    },
+    {
+      "file": "photos/heldout_scan_like.jpg",
+      "supplier": "Ferreteria El Martell, S.L.",
+      "expected": "office_supplies_furniture",
+      "actual": "other",
+      "confidence": 0.25,
+      "correct": false
+    }
+  ],
+  "confidently_wrong": [],
+  "review_queue_count": 28,
+  "review_queue_items": [
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/heldout_credit_note_es.pdf",
+      "reason": "no match above review threshold for printed name 'Suministros Garrotxa, S.L.'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/heldout_credit_note_es.pdf",
+      "reason": "category 'other' confidence 0.20 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/heldout_european_numbers.pdf",
+      "reason": "no match above review threshold for printed name 'Maquin\u00e0ria Industrial Girona, S.L.'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/heldout_european_numbers.pdf",
+      "reason": "category 'other' confidence 0.20 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/heldout_handwritten_note.pdf",
+      "reason": "no match above review threshold for printed name 'Cafeteria Pont Vell'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/heldout_handwritten_note.pdf",
+      "reason": "category 'meals_entertainment' confidence 0.60 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/heldout_multi_page.pdf",
+      "reason": "no match above review threshold for printed name 'Meridian Consulting Group, S.L.'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/heldout_multi_page.pdf",
+      "reason": "category 'professional_services' confidence 0.40 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/heldout_multiple_vat_rates.pdf",
+      "reason": "no match above review threshold for printed name 'Esdeveniments Girona, S.L.'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/heldout_multiple_vat_rates.pdf",
+      "reason": "category 'other' confidence 0.20 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/heldout_no_invoice_number.pdf",
+      "reason": "no match above review threshold for printed name 'Quiosc La Rambla'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/heldout_no_invoice_number.pdf",
+      "reason": "category 'other' confidence 0.20 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/heldout_tax_inclusive.pdf",
+      "reason": "no match above review threshold for printed name 'Taller Cer\u00e0mic Girona'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/heldout_tax_inclusive.pdf",
+      "reason": "category 'other' confidence 0.30 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/heldout_two_column_layout.pdf",
+      "reason": "no match above review threshold for printed name 'Decoracions Bages, S.L.'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/heldout_two_column_layout.pdf",
+      "reason": "category 'other' confidence 0.20 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/heldout_us_date.pdf",
+      "reason": "no match above review threshold for printed name 'Bay Area Dev Tools Inc'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/heldout_us_date.pdf",
+      "reason": "category 'software_subscriptions' confidence 0.60 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/heldout_usd_with_symbol_variants.pdf",
+      "reason": "no match above review threshold for printed name 'Pacific Grove Software LLC'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/heldout_usd_with_symbol_variants.pdf",
+      "reason": "category 'software_subscriptions' confidence 0.70 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/heldout_written_month_ca.pdf",
+      "reason": "no match above review threshold for printed name 'Vivers Can Bruguera'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/heldout_written_month_ca.pdf",
+      "reason": "category 'other' confidence 0.20 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/heldout_written_month_en.pdf",
+      "reason": "no match above review threshold for printed name 'Thistle & Co Design Studio'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/heldout_written_month_en.pdf",
+      "reason": "category 'professional_services' confidence 0.40 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "invoices/heldout_written_month_es.pdf",
+      "reason": "no match above review threshold for printed name 'Taller de Encuadernaci\u00f3n Mart\u00ed, S.L.'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "invoices/heldout_written_month_es.pdf",
+      "reason": "category 'printing_marketing' confidence 0.50 below threshold",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "new_supplier",
+      "file": "photos/heldout_scan_like.jpg",
+      "reason": "no match above review threshold for printed name 'Ferreteria El Martell, S.L.'",
+      "date": "2026-10-30"
+    },
+    {
+      "item_type": "low_confidence_category",
+      "file": "photos/heldout_scan_like.jpg",
+      "reason": "category 'other' confidence 0.25 below threshold",
+      "date": "2026-10-30"
+    }
+  ]
+}

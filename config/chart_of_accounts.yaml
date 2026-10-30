@@ -1,0 +1,77 @@
+# Expense categories for Costa Brava Studio S.L. (fictional company).
+#
+# Used by src/suppliers/categorise.py as the fixed list of codes the LLM
+# is allowed to choose from — it must never invent a code that isn't
+# here. "other" is always a valid, honest answer when nothing else fits;
+# it is not a dumping ground for categories we were too lazy to add.
+#
+# Mapped from data/synthetic/answer_key.json and data/heldout/answer_key.json's
+# `expected_category` strings in evals/run_supplier_eval.py
+# (ANSWER_KEY_TO_CODE) — see that file's comment for the mapping decisions,
+# agreed with the user on 2026-10-30.
+
+categories:
+  - code: software_subscriptions
+    name: Software & Subscriptions
+    description: >-
+      SaaS tools, software licences, and recurring app subscriptions
+      (design, dev, cloud hosting, productivity).
+
+  - code: rent_coworking
+    name: Rent & Coworking
+    description: >-
+      Office rent, coworking desks/memberships, and other workspace costs.
+
+  - code: utilities
+    name: Utilities
+    description: >-
+      Electricity, water, internet, and other building utilities.
+
+  - code: professional_services
+    name: Professional Services & Freelancers
+    description: >-
+      Freelance designers, photographers, consultants, and other outside
+      contractors — not accountants or lawyers, see accounting_legal.
+
+  - code: printing_marketing
+    name: Printing & Marketing
+    description: >-
+      Print shops, promotional materials, signage, and marketing
+      collateral.
+
+  - code: travel
+    name: Travel
+    description: >-
+      Flights, trains, hotels, and other business travel costs.
+
+  - code: office_supplies_furniture
+    name: Office Supplies & Furniture
+    description: >-
+      Stationery, toner, desks, chairs, and other physical office goods.
+
+  - code: insurance
+    name: Insurance
+    description: >-
+      Business insurance premiums (liability, property, etc.).
+
+  - code: accounting_legal
+    name: Accounting & Legal
+    description: >-
+      Bookkeepers, accountants, tax advisors, and lawyers.
+
+  - code: meals_entertainment
+    name: Meals & Entertainment
+    description: >-
+      Client meals, team meals, and entertainment expenses.
+
+  - code: shipping_courier
+    name: Shipping & Courier
+    description: >-
+      Postage, couriers, and parcel delivery.
+
+  - code: other
+    name: Other
+    description: >-
+      Anything that doesn't clearly fit another category. Use this
+      honestly when unsure, with a low confidence score — never guess at
+      a specific category instead.
