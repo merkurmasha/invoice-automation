@@ -1,0 +1,282 @@
+{
+  "model": "claude-haiku-5-5",
+  "prompt_version": "v2",
+  "timestamp": "2026-10-30_1544",
+  "elapsed_seconds": 31.335428999969736,
+  "usage": {
+    "input": 55269,
+    "output": 5461
+  },
+  "not_cached": [],
+  "extraction_failures": [],
+  "overall_accuracy": {
+    "correct": 138,
+    "total": 140
+  },
+  "accuracy_by_doc_kind": {
+    "pdf": [
+      128,
+      130
+    ],
+    "photo": [
+      10,
+      10
+    ]
+  },
+  "accuracy_by_language": {
+    "es": [
+      30,
+      30
+    ],
+    "ca": [
+      69,
+      70
+    ],
+    "en": [
+      39,
+      40
+    ]
+  },
+  "accuracy_by_currency": {
+    "EUR": [
+      108,
+      110
+    ],
+    "USD": [
+      20,
+      20
+    ],
+    "GBP": [
+      10,
+      10
+    ]
+  },
+  "accuracy_by_challenge": {
+    "credit_note_es": [
+      10,
+      10
+    ],
+    "european_numbers": [
+      10,
+      10
+    ],
+    "handwritten_note": [
+      10,
+      10
+    ],
+    "multi_page": [
+      9,
+      10
+    ],
+    "multiple_vat_rates": [
+      10,
+      10
+    ],
+    "no_invoice_number": [
+      9,
+      10
+    ],
+    "tax_inclusive": [
+      10,
+      10
+    ],
+    "two_column_layout": [
+      10,
+      10
+    ],
+    "us_date": [
+      10,
+      10
+    ],
+    "usd_with_symbol_variants": [
+      10,
+      10
+    ],
+    "written_month": [
+      30,
+      30
+    ],
+    "scan_like": [
+      10,
+      10
+    ]
+  },
+  "trap_results": [
+    {
+      "file": "invoices/heldout_credit_note_es.pdf",
+      "trap": "credit_note",
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/heldout_european_numbers.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/heldout_handwritten_note.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/heldout_multi_page.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": true,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/heldout_multiple_vat_rates.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/heldout_no_invoice_number.pdf",
+      "trap": null,
+      "caught": false,
+      "is_false_flag": true,
+      "has_soft_flag": false,
+      "error_codes": [
+        "MISSING_FIELD"
+      ]
+    },
+    {
+      "file": "invoices/heldout_tax_inclusive.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/heldout_two_column_layout.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/heldout_us_date.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": true,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/heldout_usd_with_symbol_variants.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/heldout_written_month_ca.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/heldout_written_month_en.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "invoices/heldout_written_month_es.pdf",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    },
+    {
+      "file": "photos/heldout_scan_like.jpg",
+      "trap": null,
+      "caught": true,
+      "is_false_flag": false,
+      "has_soft_flag": false,
+      "error_codes": []
+    }
+  ],
+  "false_flag_tally": {
+    "MISSING_FIELD": 1
+  },
+  "soft_flag_count": 2,
+  "field_mismatches": [
+    {
+      "file": "invoices/heldout_multi_page.pdf",
+      "field": "supplier",
+      "expected": "Meridian Consulting Group, S.L.",
+      "actual": "MCG",
+      "confidence": 0.6
+    },
+    {
+      "file": "invoices/heldout_no_invoice_number.pdf",
+      "field": "document_type",
+      "expected": "receipt",
+      "actual": "invoice",
+      "confidence": 0.95
+    }
+  ],
+  "trap_misses": [
+    {
+      "file": "invoices/heldout_no_invoice_number.pdf",
+      "trap": null,
+      "note": "expected: must NOT include any error (a LOW_CONFIDENCE warning alone is a soft flag); got issues=['MISSING_DUE_DATE', 'MISSING_FIELD']"
+    }
+  ],
+  "lowest_confidence_correct": [
+    {
+      "file": "invoices/heldout_us_date.pdf",
+      "field": "issue_date",
+      "confidence": 0.6
+    },
+    {
+      "file": "invoices/heldout_multiple_vat_rates.pdf",
+      "field": "vat",
+      "confidence": 0.85
+    },
+    {
+      "file": "photos/heldout_scan_like.jpg",
+      "field": "supplier",
+      "confidence": 0.85
+    },
+    {
+      "file": "invoices/heldout_european_numbers.pdf",
+      "field": "language",
+      "confidence": 0.9
+    },
+    {
+      "file": "invoices/heldout_handwritten_note.pdf",
+      "field": "supplier",
+      "confidence": 0.9
+    }
+  ],
+  "high_confidence_wrong": [
+    {
+      "file": "invoices/heldout_no_invoice_number.pdf",
+      "field": "document_type",
+      "confidence": 0.95
+    }
+  ],
+  "photo_vs_source_pdf": {}
+}
