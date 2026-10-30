@@ -226,18 +226,23 @@ def copy_documents(rows: list[LedgerRow], documents_dir: Path) -> list[Path]:
 def build_summary_md(
     month: str,
     rows: list[LedgerRow],
+    receivables_this_month: list[ledger.Obligation],
     exception_rows: list[exceptions_module.ExceptionRow],
     aging_summary: dict[str, dict[str, float]],
 ) -> str:
-    totals_by_currency: dict[str, float] = {}
+    totals_out_by_currency: dict[str, float] = {}
     vat_by_currency: dict[str, float] = {}
     category_totals: dict[tuple[str, str], float] = {}  # (category, currency) -> total
 
     for row in rows:
-        totals_by_currency[row.currency] = round(totals_by_currency.get(row.currency, 0.0) + row.total, 2)
+        totals_out_by_currency[row.currency] = round(totals_out_by_currency.get(row.currency, 0.0) + row.total, 2)
         vat_by_currency[row.currency] = round(vat_by_currency.get(row.currency, 0.0) + row.vat, 2)
         key = (row.category, row.currency)
         category_totals[key] = round(category_totals.get(key, 0.0) + row.total, 2)
+
+    totals_in_by_currency: dict[str, float] = {}
+    for ob in receivables_this_month:
+        totals_in_by_currency[ob.currency] = round(totals_in_by_currency.get(ob.currency, 0.0) + ob.total, 2)
 
     review_count = sum(1 for row in rows if row.validation_status == "review")
 
@@ -247,18 +252,27 @@ def build_summary_md(
     lines.append(
         "*Demo data for a fictional company (Costa Brava Studio S.L.). "
         "Category and supplier names come from the synthetic dataset's "
-        "answer key, not a real categorisation run - see CLAUDE.md.*"
+        "answer key, not a real categorisation run. `validation_status` "
+        "in ledger.csv IS from a real run of src.validate.validate_invoice() "
+        "against each answer-key entry (see CLAUDE.md and src/pack/build.py's "
+        "validation_statuses()).*"
     )
     lines.append("")
 
-    lines.append("## Totals by currency")
+    lines.append("## Money in / money out by currency")
     lines.append("")
-    lines.append("Never added together across currencies - see the per-currency rows below.")
+    lines.append(
+        "Never added together across currencies - each currency gets its own row, "
+        "and money in is never netted against money out even within one currency."
+    )
     lines.append("")
-    lines.append("| Currency | Total (net+vat, credit notes negative) | VAT |")
-    lines.append("| --- | --- | --- |")
-    for currency in sorted(totals_by_currency):
-        lines.append(f"| {currency} | {totals_by_currency[currency]:.2f} | {vat_by_currency[currency]:.2f} |")
+    lines.append("| Currency | Money in (sales invoices issued) | Money out (net+vat, credit notes negative) | VAT out |")
+    lines.append("| --- | --- | --- | --- |")
+    for currency in sorted(set(totals_in_by_currency) | set(totals_out_by_currency)):
+        money_in = totals_in_by_currency.get(currency, 0.0)
+        money_out = totals_out_by_currency.get(currency, 0.0)
+        vat_out = vat_by_currency.get(currency, 0.0)
+        lines.append(f"| {currency} | {money_in:.2f} | {money_out:.2f} | {vat_out:.2f} |")
     lines.append("")
 
     lines.append("## Top categories")
@@ -273,6 +287,13 @@ def build_summary_md(
     lines.append("")
     lines.append(f"- {review_count} invoice(s) this month failed validation (see `validation_status` in ledger.csv).")
     lines.append(f"- {len(exception_rows)} reconciliation exception(s) this month (see exceptions.csv).")
+    lines.append(
+        "  - Bank-line exceptions (unmatched/ambiguous/possible/combo) are grouped by the "
+        "*bank transaction's* date. Invoice exceptions (no payment seen / partial balance) "
+        "are grouped by the invoice's *issue* date, same as ledger.csv - not by due date, "
+        "so one of this month's invoices still shows up here even if it isn't due until "
+        "a later month."
+    )
     lines.append("")
 
     lines.append("## Overdue receivables (whole book, not just this month)")
@@ -291,10 +312,13 @@ def build_summary_md(
         attention.append(f"{review_count} invoice(s) this month need a validation review.")
     unmatched = sum(1 for r in exception_rows if r.category == exceptions_module.UNMATCHED_BANK_LINE)
     ambiguous = sum(1 for r in exception_rows if r.category == exceptions_module.AMBIGUOUS)
+    possible = sum(1 for r in exception_rows if r.category == exceptions_module.POSSIBLE_MATCH)
     if unmatched:
         attention.append(f"{unmatched} unmatched bank line(s) this month.")
     if ambiguous:
         attention.append(f"{ambiguous} ambiguous bank line(s) this month - pick the right invoice by hand.")
+    if possible:
+        attention.append(f"{possible} possible match(es) this month awaiting confirmation (see exceptions.csv).")
     overdue_60 = aging_summary[aging.BUCKET_60_PLUS]
     if overdue_60["count"]:
         attention.append(
@@ -334,7 +358,7 @@ def _filter_exceptions_to_month(
             obligation = obligations_by_invoice.get(row.invoice_numbers[0]) if row.invoice_numbers else None
             if obligation is not None and _month_matches(obligation.issue_date, month):
                 filtered.append(row)
-        elif row.date is not None and _month_matches(row.date, month):
+        elif row.bank_date is not None and _month_matches(row.bank_date, month):
             filtered.append(row)
     return filtered
 
@@ -364,10 +388,12 @@ def build_pack(month: str, out_dir: Path, today: date) -> Path:
     pack_dir = out_dir / month
     pack_dir.mkdir(parents=True, exist_ok=True)
 
+    receivables_this_month = [ob for ob in receivables if _month_matches(ob.issue_date, month)]
+
     write_ledger_csv(rows, pack_dir / "ledger.csv")
     copy_documents(rows, pack_dir / "documents")
     exceptions_module.write_exceptions_csv(month_exceptions, pack_dir / "exceptions.csv")
-    summary_text = build_summary_md(month, rows, month_exceptions, aging_summary)
+    summary_text = build_summary_md(month, rows, receivables_this_month, month_exceptions, aging_summary)
     (pack_dir / "summary.md").write_text(summary_text)
 
     return pack_dir
