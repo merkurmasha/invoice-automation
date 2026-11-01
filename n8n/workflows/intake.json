@@ -46,7 +46,7 @@
       "position": [-200, 0],
       "parameters": {
         "operation": "write",
-        "fileName": "={{ '/tmp/invoice-automation-inbox/' + $json.name }}",
+        "fileName": "={{ $env.INBOX_TMP_FOLDER + '/' + $json.name }}",
         "options": {}
       }
     },

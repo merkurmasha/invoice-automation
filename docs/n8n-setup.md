@@ -65,6 +65,12 @@ things before starting n8n:
   Since this n8n only listens on localhost and only ever runs the
   three fixed commands baked into the workflow JSON files you import
   yourself, re-enabling it here is safe.
+- Restricts every node's file read/write operations to a single
+  folder, `n8n/data/inbox-tmp/` (created automatically, gitignored).
+  The intake workflow's "Write to temp folder" node downloads each
+  Drive file there before `process_invoice.py` reads it, and this
+  setting stops any node — including a misconfigured one — from
+  writing anywhere else on your Mac.
 
 Once it's running, open **http://localhost:5678** in your browser and
 create your n8n account (this is a *local* account — n8n asks for an
@@ -304,6 +310,17 @@ or the node can't see `$INVOICE_AUTOMATION_REPO` at all.** n8n blocks
 nodes from reading process env vars via `$env` by default; `n8n/start.sh`
 sets `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` to allow it, so make sure
 you started n8n with that script rather than `n8n start` directly.
+
+**"Write to temp folder" fails with "The file ... is not writable" (or
+any other node fails to read/write a path outside `n8n/data/inbox-tmp/`).**
+`n8n/start.sh` sets `N8N_RESTRICT_FILE_ACCESS_TO` to that one folder, so
+every node's file access is confined to it — this is expected if a
+node's path points anywhere else (e.g. `/tmp`, which macOS clears on
+reboot and which this project never writes to for that reason). If you
+imported `intake.json` before this restriction existed, re-open the
+"Write to temp folder" node and confirm its "File Name" field reads
+`={{ $env.INBOX_TMP_FOLDER + '/' + $json.name }}`, not a literal `/tmp/...`
+path.
 
 **A Google node fails with `403` or "access blocked: this app's
 request is invalid".** Almost always one of: the redirect URI in your

@@ -21,6 +21,14 @@
 #     only commands it runs are the fixed ones hardcoded into the
 #     workflow JSON files you import yourself, and nothing in this repo
 #     lets an external request reach n8n in the first place.
+#   - N8N_RESTRICT_FILE_ACCESS_TO is set to n8n/data/inbox-tmp/ — the
+#     only folder any node's file read/write operations are allowed to
+#     touch. The intake workflow's "Write to temp folder" node downloads
+#     each Drive file there before handing it to process_invoice.py.
+#     This folder lives inside n8n/data/ (gitignored, same as the user
+#     folder above), not macOS's /tmp, because /tmp is cleared on every
+#     reboot and n8n would otherwise refuse to write there anyway once
+#     this restriction is set.
 #
 # Does NOT install n8n - run `n8n --version` first; if that fails, see
 # docs/n8n-setup.md's "Install n8n" section before running this script.
@@ -41,11 +49,16 @@ export NODES_EXCLUDE='[]'
 export INVOICE_AUTOMATION_REPO="$REPO_ROOT"
 
 # n8n blocks nodes from reading process env vars via $env by default.
-# The intake workflow's Execute Command node reads $INVOICE_AUTOMATION_REPO
+# The intake workflow's Execute Command node reads $INVOICE_AUTOMATION_REPO,
+# and its "Write to temp folder" node reads $INBOX_TMP_FOLDER (below),
 # through $env, so that access has to be allowed here.
 export N8N_BLOCK_ENV_ACCESS_IN_NODE=false
 
-mkdir -p "$N8N_USER_FOLDER"
+INBOX_TMP_FOLDER="$REPO_ROOT/n8n/data/inbox-tmp"
+export INBOX_TMP_FOLDER
+export N8N_RESTRICT_FILE_ACCESS_TO="$INBOX_TMP_FOLDER"
+
+mkdir -p "$N8N_USER_FOLDER" "$INBOX_TMP_FOLDER"
 
 echo "Repo root:    $REPO_ROOT"
 echo "Data folder:  $N8N_USER_FOLDER"
