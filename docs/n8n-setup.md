@@ -165,7 +165,7 @@ remember it):
 - `Invoices-Inbox` — drop new invoices/receipts here; the intake
   workflow watches this folder.
 - `Invoices-Processed` — invoices that passed validation land here,
-  renamed.
+  under their original name.
 - `Invoices-Review` — invoices that need a human look land here,
   under their original name.
 - `Accountant-Packs` — month-end packs get uploaded here.
@@ -197,12 +197,6 @@ For each file in `n8n/workflows/` (`intake.json`, `receivables.json`,
      and re-pick the real folder/sheet/tab from the list — the JSON
      only carries the *name* as a label, not Google's internal ID, so
      this step re-links it to your actual Drive/Sheet.
-   - On "Rename + move to processed" specifically: after re-picking its
-     folder, open **Options** and check the **File Name** field still
-     reads `={{ $json.standardised_filename }}`. Re-picking the folder
-     has, in practice, sometimes cleared this field — without it, the
-     file lands in `Invoices-Processed` under its original name
-     instead of the standardised one.
 3. n8n node parameters occasionally change their exact field names
    between versions. If a node shows a small warning icon after
    import, open it — n8n usually shows you exactly which field needs
@@ -270,9 +264,9 @@ ls data/synthetic/invoices | head -3
    Drive's `Invoices-Inbox` folder.
 3. Within a minute, check the **Executions** tab in n8n for a run.
    Click it to see each node's output. Confirm: the file moved out of
-   `Invoices-Inbox` into either `Invoices-Processed` (renamed) or
-   `Invoices-Review` (original name), and a new row appeared in the
-   matching Sheet tab.
+   `Invoices-Inbox` into either `Invoices-Processed` or
+   `Invoices-Review` (both under their original name), and a new row
+   appeared in the matching Sheet tab.
 
 **Test receivables.json:**
 1. Open the workflow, click the **Run receivables_today.py** node, and

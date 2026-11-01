@@ -109,9 +109,7 @@
           "value": "",
           "cachedResultName": "Invoices-Processed"
         },
-        "options": {
-          "fileName": "={{ $json.standardised_filename }}"
-        }
+        "options": {}
       },
       "credentials": {
         "googleDriveOAuth2Api": { "id": "", "name": "Google Drive account" }
