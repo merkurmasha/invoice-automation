@@ -299,6 +299,12 @@ root at least once (step 6 of the main setup, not this file) — the
 wrapper scripts live in the `scripts` package, which needs that
 install step to be importable.
 
+**Execute Command fails with something like "access to env vars denied"
+or the node can't see `$INVOICE_AUTOMATION_REPO` at all.** n8n blocks
+nodes from reading process env vars via `$env` by default; `n8n/start.sh`
+sets `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` to allow it, so make sure
+you started n8n with that script rather than `n8n start` directly.
+
 **A Google node fails with `403` or "access blocked: this app's
 request is invalid".** Almost always one of: the redirect URI in your
 OAuth client doesn't exactly match

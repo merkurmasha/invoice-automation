@@ -40,6 +40,11 @@ export NODES_EXCLUDE='[]'
 # matter what directory n8n itself happens to be started from.
 export INVOICE_AUTOMATION_REPO="$REPO_ROOT"
 
+# n8n blocks nodes from reading process env vars via $env by default.
+# The intake workflow's Execute Command node reads $INVOICE_AUTOMATION_REPO
+# through $env, so that access has to be allowed here.
+export N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+
 mkdir -p "$N8N_USER_FOLDER"
 
 echo "Repo root:    $REPO_ROOT"
