@@ -177,7 +177,7 @@ tabs and these exact header rows in row 1:
 | Tab name | Column headers (row 1) |
 | --- | --- |
 | `Ledger` | `Date`, `Supplier`, `Invoice Number`, `Category`, `Standardised Filename`, `Drive Subfolder`, `Original File`, `Status`, `Drive Link` |
-| `Review queue` | `Date`, `Original File`, `Status`, `Reasons`, `Error`, `Drive Link` |
+| `Review queue` | `Date`, `Original File`, `Status`, `Reasons`, `Drive Link` |
 | `Reminders` | `Date`, `Invoice`, `Stage`, `Customer`, `Subject`, `Needs Review`, `Status` |
 
 ## 6. Import each workflow
@@ -222,6 +222,14 @@ document into `Invoices-Review`. `--n8n` makes the script exit 0 for
 for a real crash); the next node, "Parse result", reads the printed
 `status` field itself and the "Status is pass?" node branches on it,
 so "review" still ends up in the right place.
+
+A real crash (`"status": "error"`) still exits non-zero even with
+`--n8n`, so "Run process_invoice.py" fails the node and the workflow
+stops right there — it never reaches "Parse result" or "Append to
+Review queue". That's why the Review queue tab has no `Error` column:
+whatever that cell would show is never reachable in practice, so it's
+left out of the mapping entirely rather than wired up to always print
+blank.
 
 To check what a file *would* do without actually filing it — e.g.
 while testing, or checking a batch of synthetic invoices before an

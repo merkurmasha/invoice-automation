@@ -139,8 +139,22 @@
             "Drive Subfolder": "={{ $('Parse result').item.json.drive_subfolder }}",
             "Original File": "={{ $('Parse result').item.json.drive_file_name }}",
             "Status": "={{ $('Parse result').item.json.status }}",
-            "Drive Link": "={{ 'https://drive.google.com/file/d/' + $('Rename + move to processed').item.json.id + '/view' }}"
-          }
+            "Drive Link": "=https://drive.google.com/file/d/{{ $('Rename + move to processed').item.json.id }}/view"
+          },
+          "matchingColumns": [],
+          "schema": [
+            { "id": "Date", "displayName": "Date", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Supplier", "displayName": "Supplier", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Invoice Number", "displayName": "Invoice Number", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Category", "displayName": "Category", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Standardised Filename", "displayName": "Standardised Filename", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Drive Subfolder", "displayName": "Drive Subfolder", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Original File", "displayName": "Original File", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Status", "displayName": "Status", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Drive Link", "displayName": "Drive Link", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true, "removed": false }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
         },
         "options": {}
       },
@@ -189,9 +203,19 @@
             "Original File": "={{ $('Parse result').item.json.drive_file_name }}",
             "Status": "={{ $('Parse result').item.json.status }}",
             "Reasons": "={{ ($('Parse result').item.json.review_reasons || []).join('; ') }}",
-            "Error": "={{ $('Parse result').item.json.error || '' }}",
-            "Drive Link": "={{ 'https://drive.google.com/file/d/' + $('Move to review').item.json.id + '/view' }}"
-          }
+            "Drive Link": "=https://drive.google.com/file/d/{{ $('Move to review').item.json.id }}/view"
+          },
+          "matchingColumns": [],
+          "schema": [
+            { "id": "Date", "displayName": "Date", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Original File", "displayName": "Original File", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Status", "displayName": "Status", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Reasons", "displayName": "Reasons", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Error", "displayName": "Error", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true, "removed": true },
+            { "id": "Drive Link", "displayName": "Drive Link", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true, "removed": false }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
         },
         "options": {}
       },
