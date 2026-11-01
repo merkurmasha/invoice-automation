@@ -57,7 +57,7 @@
       "typeVersion": 1,
       "position": [20, 0],
       "parameters": {
-        "command": "={{ 'cd ' + $env.INVOICE_AUTOMATION_REPO + ' && .venv/bin/python -m scripts.process_invoice ' + $json.fileName }}"
+        "command": "={{ 'cd ' + $env.INVOICE_AUTOMATION_REPO + ' && .venv/bin/python -m scripts.process_invoice --n8n ' + $json.fileName }}"
       }
     },
     {

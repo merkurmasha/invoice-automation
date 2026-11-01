@@ -270,3 +270,97 @@ def test_main_prints_one_json_object_and_exit_code_matches_status(sample_file, t
     assert exit_code == 0
     out = capsys.readouterr().out
     assert '"status": "pass"' in out
+
+
+def test_main_review_exits_2_without_n8n_flag(sample_file, tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(extract_module, "_default_client", lambda: FakeClient([VALID_EXTRACT_RAW]))
+    monkeypatch.setattr(
+        categorise_module, "_default_client", lambda: FakeClient([HIGH_CONFIDENCE_CATEGORY_RAW])
+    )
+
+    exit_code = process_invoice_module.main(
+        [
+            str(sample_file),
+            "--today",
+            "2026-10-20",
+            "--duplicate-cache-path",
+            str(tmp_path / "seen_invoices.json"),
+            "--supplier-master-path",
+            str(tmp_path / "suppliers.csv"),
+        ]
+    )
+
+    assert exit_code == 2
+    out = capsys.readouterr().out
+    assert '"status": "review"' in out
+
+
+def test_main_review_exits_0_with_n8n_flag(sample_file, tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(extract_module, "_default_client", lambda: FakeClient([VALID_EXTRACT_RAW]))
+    monkeypatch.setattr(
+        categorise_module, "_default_client", lambda: FakeClient([HIGH_CONFIDENCE_CATEGORY_RAW])
+    )
+
+    exit_code = process_invoice_module.main(
+        [
+            str(sample_file),
+            "--today",
+            "2026-10-20",
+            "--duplicate-cache-path",
+            str(tmp_path / "seen_invoices.json"),
+            "--supplier-master-path",
+            str(tmp_path / "suppliers.csv"),
+            "--n8n",
+        ]
+    )
+
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert '"status": "review"' in out
+
+
+def test_main_pass_exits_0_with_n8n_flag(sample_file, tmp_path, monkeypatch, capsys):
+    supplier_master = tmp_path / "suppliers.csv"
+    _seed_supplier_master(supplier_master, "Notion Labs, Inc.")
+    monkeypatch.setattr(extract_module, "_default_client", lambda: FakeClient([VALID_EXTRACT_RAW]))
+    monkeypatch.setattr(
+        categorise_module, "_default_client", lambda: FakeClient([HIGH_CONFIDENCE_CATEGORY_RAW])
+    )
+
+    exit_code = process_invoice_module.main(
+        [
+            str(sample_file),
+            "--today",
+            "2026-10-20",
+            "--duplicate-cache-path",
+            str(tmp_path / "seen_invoices.json"),
+            "--supplier-master-path",
+            str(supplier_master),
+            "--n8n",
+        ]
+    )
+
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert '"status": "pass"' in out
+
+
+def test_main_error_exits_1_even_with_n8n_flag(tmp_path, capsys):
+    missing_file = tmp_path / "does_not_exist.pdf"
+
+    exit_code = process_invoice_module.main(
+        [
+            str(missing_file),
+            "--today",
+            "2026-10-20",
+            "--duplicate-cache-path",
+            str(tmp_path / "seen_invoices.json"),
+            "--supplier-master-path",
+            str(tmp_path / "suppliers.csv"),
+            "--n8n",
+        ]
+    )
+
+    assert exit_code == 1
+    out = capsys.readouterr().out
+    assert '"status": "error"' in out

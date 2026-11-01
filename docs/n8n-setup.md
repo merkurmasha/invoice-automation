@@ -212,6 +212,17 @@ For each file in `n8n/workflows/` (`intake.json`, `receivables.json`,
 `receivables.json` imports **inactive**, with its Schedule Trigger
 node disabled, on purpose — see the safety note in step 8.
 
+`intake.json`'s "Run process_invoice.py" node calls the script with
+`--n8n`. Without that flag, `process_invoice.py` exits 2 for a
+document that needs review (a duplicate, an unclear supplier, ...),
+and n8n's Execute Command node treats *any* non-zero exit as a node
+failure — so the workflow would stop there instead of filing the
+document into `Invoices-Review`. `--n8n` makes the script exit 0 for
+"review" too (it still exits non-zero, and prints `"status": "error"`,
+for a real crash); the next node, "Parse result", reads the printed
+`status` field itself and the "Status is pass?" node branches on it,
+so "review" still ends up in the right place.
+
 ## 7. Test each flow with a synthetic file
 
 This repo already has synthetic test invoices you can use — don't use
@@ -310,6 +321,12 @@ or the node can't see `$INVOICE_AUTOMATION_REPO` at all.** n8n blocks
 nodes from reading process env vars via `$env` by default; `n8n/start.sh`
 sets `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` to allow it, so make sure
 you started n8n with that script rather than `n8n start` directly.
+
+**A document that should go to `Invoices-Review` stops the workflow
+instead, with "Run process_invoice.py" shown as failed in the
+Executions tab.** The node's command is missing the `--n8n` flag — see
+step 6 above. Re-open the node and confirm the command ends in
+`--n8n ' + $json.fileName`, not just `' + $json.fileName`.
 
 **"Write to temp folder" fails with "The file ... is not writable" (or
 any other node fails to read/write a path outside `n8n/data/inbox-tmp/`).**

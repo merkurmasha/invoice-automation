@@ -1,6 +1,6 @@
 """n8n wrapper: turn one invoice/receipt file into one intake decision.
 
-    .venv/bin/python -m scripts.process_invoice <path-to-file> [--today YYYY-MM-DD]
+    .venv/bin/python -m scripts.process_invoice <path-to-file> [--today YYYY-MM-DD] [--n8n]
 
 Runs, in order: extraction (src.extract.extract.extract_invoice),
 validation against the REAL intake duplicate cache
@@ -14,6 +14,11 @@ object to stdout and exits:
     2 — review: a human should look at it (missing data, a new/unclear
         supplier, a low-confidence category, or a validation issue)
     1 — error: couldn't even run (bad file, missing API key, ...)
+
+With --n8n, "review" also exits 0 — n8n's Execute Command node treats
+any non-zero exit as a node failure, so this flag is for the intake
+workflow, which parses the printed status itself to route "review" to
+its review branch. "error" still exits non-zero either way.
 
 Per CLAUDE.md, extraction and categorisation are the only two LLM calls
 here. Duplicate detection, supplier matching, and the standardised
@@ -180,6 +185,12 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Override the supplier master CSV path (default: data/suppliers.csv)",
     )
+    parser.add_argument(
+        "--n8n",
+        action="store_true",
+        help='Exit 0 for "review" as well as "pass" (n8n treats any non-zero '
+        'exit as a node failure); "error" still exits non-zero.',
+    )
     args = parser.parse_args(argv)
 
     today = date.fromisoformat(args.today) if args.today else None
@@ -195,7 +206,7 @@ def main(argv: list[str] | None = None) -> int:
     if result["status"] == STATUS_PASS:
         return 0
     if result["status"] == STATUS_REVIEW:
-        return 2
+        return 0 if args.n8n else 2
     return 1
 
 
