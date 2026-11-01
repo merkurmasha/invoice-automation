@@ -345,6 +345,76 @@ def test_main_pass_exits_0_with_n8n_flag(sample_file, tmp_path, monkeypatch, cap
     assert '"status": "pass"' in out
 
 
+def test_dry_run_leaves_supplier_master_and_cache_untouched(sample_file, tmp_path):
+    supplier_master = tmp_path / "suppliers.csv"
+    _seed_supplier_master(supplier_master, "Notion Labs, Inc.")
+    original_master_bytes = supplier_master.read_bytes()
+    duplicate_cache = tmp_path / "seen_invoices.json"
+    client = FakeClient([VALID_EXTRACT_RAW, HIGH_CONFIDENCE_CATEGORY_RAW])
+
+    result = process_invoice_module.process_invoice(
+        sample_file,
+        client=client,
+        today=date(2026, 10, 20),
+        duplicate_cache_path=duplicate_cache,
+        supplier_master_path=supplier_master,
+        dry_run=True,
+    )
+
+    assert result["status"] == "pass"
+    assert result["supplier_match"]["status"] == "exact"
+    assert supplier_master.read_bytes() == original_master_bytes, "dry_run must not rewrite the supplier master"
+    assert not duplicate_cache.exists(), "dry_run must not create/write the duplicate cache"
+
+
+def test_without_dry_run_still_writes_supplier_master_and_cache(sample_file, tmp_path):
+    supplier_master = tmp_path / "suppliers.csv"
+    duplicate_cache = tmp_path / "seen_invoices.json"
+    client = FakeClient([VALID_EXTRACT_RAW, HIGH_CONFIDENCE_CATEGORY_RAW])
+
+    process_invoice_module.process_invoice(
+        sample_file,
+        client=client,
+        today=date(2026, 10, 20),
+        duplicate_cache_path=duplicate_cache,
+        supplier_master_path=supplier_master,
+        dry_run=False,
+    )
+
+    assert supplier_master.exists(), "a real (non-dry) run should create the supplier master"
+    assert duplicate_cache.exists(), "a real (non-dry) run should create the duplicate cache"
+
+
+def test_main_dry_run_flag_does_not_write_files(sample_file, tmp_path, monkeypatch, capsys):
+    supplier_master = tmp_path / "suppliers.csv"
+    _seed_supplier_master(supplier_master, "Notion Labs, Inc.")
+    original_master_bytes = supplier_master.read_bytes()
+    duplicate_cache = tmp_path / "seen_invoices.json"
+    monkeypatch.setattr(extract_module, "_default_client", lambda: FakeClient([VALID_EXTRACT_RAW]))
+    monkeypatch.setattr(
+        categorise_module, "_default_client", lambda: FakeClient([HIGH_CONFIDENCE_CATEGORY_RAW])
+    )
+
+    exit_code = process_invoice_module.main(
+        [
+            str(sample_file),
+            "--today",
+            "2026-10-20",
+            "--duplicate-cache-path",
+            str(duplicate_cache),
+            "--supplier-master-path",
+            str(supplier_master),
+            "--dry-run",
+        ]
+    )
+
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert '"status": "pass"' in out
+    assert supplier_master.read_bytes() == original_master_bytes
+    assert not duplicate_cache.exists()
+
+
 def test_main_error_exits_1_even_with_n8n_flag(tmp_path, capsys):
     missing_file = tmp_path / "does_not_exist.pdf"
 

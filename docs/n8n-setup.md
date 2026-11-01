@@ -223,6 +223,21 @@ for a real crash); the next node, "Parse result", reads the printed
 `status` field itself and the "Status is pass?" node branches on it,
 so "review" still ends up in the right place.
 
+To check what a file *would* do without actually filing it — e.g.
+while testing, or checking a batch of synthetic invoices before an
+n8n run — call the script directly with `--dry-run`:
+
+```bash
+.venv/bin/python -m scripts.process_invoice --n8n --dry-run data/synthetic/invoices/<file>.pdf
+```
+
+This still runs the full pipeline (extraction and categorisation
+included — it's still a real Claude API call) and prints the same
+JSON, but never writes to `data/cache/seen_invoices.json` or
+`data/suppliers.csv`. Without `--dry-run`, a real run marks the
+invoice as seen — running the same file through again then reports a
+duplicate, same as it would after n8n actually processed it.
+
 ## 7. Test each flow with a synthetic file
 
 This repo already has synthetic test invoices you can use — don't use

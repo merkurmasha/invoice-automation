@@ -1,6 +1,6 @@
 """n8n wrapper: turn one invoice/receipt file into one intake decision.
 
-    .venv/bin/python -m scripts.process_invoice <path-to-file> [--today YYYY-MM-DD] [--n8n]
+    .venv/bin/python -m scripts.process_invoice <path-to-file> [--today YYYY-MM-DD] [--n8n] [--dry-run]
 
 Runs, in order: extraction (src.extract.extract.extract_invoice),
 validation against the REAL intake duplicate cache
@@ -19,6 +19,12 @@ With --n8n, "review" also exits 0 — n8n's Execute Command node treats
 any non-zero exit as a node failure, so this flag is for the intake
 workflow, which parses the printed status itself to route "review" to
 its review branch. "error" still exits non-zero either way.
+
+With --dry-run, the pipeline still runs in full (extraction included —
+this still costs a real Claude API call) and prints the same JSON, but
+never writes to data/cache/seen_invoices.json or data/suppliers.csv.
+Use this to check what a file *would* do without marking it as seen —
+running it for real afterwards is what actually files it.
 
 Per CLAUDE.md, extraction and categorisation are the only two LLM calls
 here. Duplicate detection, supplier matching, and the standardised
@@ -87,11 +93,17 @@ def process_invoice(
     today: date | None = None,
     duplicate_cache_path: str | Path | None = None,
     supplier_master_path: str | Path | None = None,
+    dry_run: bool = False,
 ) -> dict:
     """Run the full intake pipeline for one file and return the dict
     main() prints as JSON. Kept separate from main() so tests can call
     it directly with a fake `client` — CLAUDE.md's testing rule means
-    tests must never reach the real Claude API."""
+    tests must never reach the real Claude API.
+
+    dry_run=True runs everything (including matching against the real
+    cache/master, so the returned status is accurate) but suppresses
+    both files' writes — see DuplicateDetector.save() and
+    SupplierMaster.save() below."""
     path = Path(path)
     today = today or date.today()
     result: dict = {"file": str(path)}
@@ -112,7 +124,8 @@ def process_invoice(
     )
     detector.load()
     validation = validate_invoice(extracted, detector, today=today)
-    detector.save()
+    if not dry_run:
+        detector.save()
     result["validation"] = validation.to_dict()
 
     reasons: list[str] = []
@@ -122,6 +135,12 @@ def process_invoice(
     canonical_supplier_name: str | None = None
     if extracted.supplier:
         master = SupplierMaster(supplier_master_path or SUPPLIER_MASTER_PATH)
+        if dry_run:
+            # match_or_create()/._touch() save() as a side effect of
+            # matching, not as a separate step we could skip — so a
+            # dry run matches against the real master in memory, then
+            # no-ops the one method that would write it back out.
+            master.save = lambda: None  # type: ignore[method-assign]
         supplier_match = master.match_or_create(extracted.supplier, seen_on=today.isoformat())
         canonical_supplier_name = supplier_match.canonical_name
         result["supplier_match"] = {
@@ -191,6 +210,13 @@ def main(argv: list[str] | None = None) -> int:
         help='Exit 0 for "review" as well as "pass" (n8n treats any non-zero '
         'exit as a node failure); "error" still exits non-zero.',
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Run the full pipeline and print the same JSON, but don't write "
+        "to the duplicate cache or the supplier master — use this to check "
+        "whether a file would pass without marking it as seen.",
+    )
     args = parser.parse_args(argv)
 
     today = date.fromisoformat(args.today) if args.today else None
@@ -199,6 +225,7 @@ def main(argv: list[str] | None = None) -> int:
         today=today,
         duplicate_cache_path=args.duplicate_cache_path,
         supplier_master_path=args.supplier_master_path,
+        dry_run=args.dry_run,
     )
 
     print(json.dumps(result, indent=2))
