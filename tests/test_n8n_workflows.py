@@ -26,6 +26,15 @@ _SHEETS_APPEND_NODES = {
     "Append to Review queue": "Review queue",
 }
 
+# Each Sheets append node's "Drive Link" column has to build its URL from
+# the *preceding* Drive "move" node's file id — that move node's own output
+# has no webViewLink field, so referencing one there silently writes
+# "undefined" into the cell instead of failing loudly.
+_DRIVE_LINK_SOURCE_NODE = {
+    "Append to Ledger": "Rename + move to processed",
+    "Append to Review queue": "Move to review",
+}
+
 # Node types that can transmit an email/message. gmail/emailSend/etc are
 # fine for drafting; only specific resource+operation combinations
 # below actually send something.
@@ -160,6 +169,22 @@ def test_sheets_append_nodes_use_manual_mapping_matching_documented_headers():
                 "'Parse result', so it must reference the data source by name, e.g. "
                 "$('Parse result').item.json.<field>"
             )
+
+        drive_link_expression = columns.get("value", {}).get("Drive Link", "")
+        assert "webViewLink" not in drive_link_expression, (
+            f"{node_name}: 'Drive Link' references webViewLink, but the Drive 'move' node's "
+            f"output has no such field ({drive_link_expression!r}) — build the link from the "
+            "file id instead: 'https://drive.google.com/file/d/' + ...item.json.id + '/view'"
+        )
+        source_node = _DRIVE_LINK_SOURCE_NODE[node_name]
+        assert f"$('{source_node}').item.json.id" in drive_link_expression, (
+            f"{node_name}: 'Drive Link' ({drive_link_expression!r}) doesn't reference "
+            f"$('{source_node}').item.json.id"
+        )
+        assert "https://drive.google.com/file/d/" in drive_link_expression, (
+            f"{node_name}: 'Drive Link' ({drive_link_expression!r}) doesn't build a "
+            "drive.google.com/file/d/... URL"
+        )
 
 
 def test_receivables_schedule_trigger_is_disabled_by_default():
