@@ -15,6 +15,16 @@ import re
 from pathlib import Path
 
 WORKFLOWS_DIR = Path(__file__).resolve().parents[1] / "n8n" / "workflows"
+N8N_SETUP_DOC = Path(__file__).resolve().parents[1] / "docs" / "n8n-setup.md"
+
+# Google Sheets "append" nodes in intake.json whose columns must be
+# defined manually (never auto-mapped from whatever node happens to
+# feed them) and must match a documented Sheet tab 1:1. Keyed by node
+# name -> the tab name as it appears in n8n-setup.md's header table.
+_SHEETS_APPEND_NODES = {
+    "Append to Ledger": "Ledger",
+    "Append to Review queue": "Review queue",
+}
 
 # Node types that can transmit an email/message. gmail/emailSend/etc are
 # fine for drafting; only specific resource+operation combinations
@@ -108,6 +118,48 @@ def test_credentials_are_placeholders_only():
                     f"{path.name}: credential {cred_type!r} has a non-empty id — "
                     "should be a placeholder with id=''"
                 )
+
+
+def _documented_headers(tab_name: str) -> list[str]:
+    """Row 1 header list for `tab_name`, from the `| `Tab` | `Col1`, ... |`
+    table in docs/n8n-setup.md — the single source of truth for what a
+    Sheet tab's columns are actually called."""
+    for line in N8N_SETUP_DOC.read_text(encoding="utf-8").splitlines():
+        cells = re.findall(r"`([^`]+)`", line)
+        if cells and cells[0] == tab_name:
+            return cells[1:]
+    raise AssertionError(f"No documented header row found for tab {tab_name!r} in {N8N_SETUP_DOC}")
+
+
+def test_sheets_append_nodes_use_manual_mapping_matching_documented_headers():
+    workflow = json.loads((WORKFLOWS_DIR / "intake.json").read_text(encoding="utf-8"))
+    nodes_by_name = {n.get("name"): n for n in _iter_nodes(workflow)}
+
+    for node_name, tab_name in _SHEETS_APPEND_NODES.items():
+        node = nodes_by_name[node_name]
+        assert node.get("type") == "n8n-nodes-base.googleSheets", f"{node_name} is not a Google Sheets node"
+
+        columns = node.get("parameters", {}).get("columns", {})
+        assert columns.get("mappingMode") == "defineBelow", (
+            f"{node_name}: columns.mappingMode is {columns.get('mappingMode')!r}, expected 'defineBelow' "
+            "(manual mapping) — automatic mapping would write whatever fields the previous node "
+            "happens to output (e.g. a Drive node's id/name/mimeType) instead of the documented columns"
+        )
+
+        mapped_columns = list(columns.get("value", {}).keys())
+        expected_columns = _documented_headers(tab_name)
+        assert mapped_columns == expected_columns, (
+            f"{node_name}: mapped columns {mapped_columns} don't match the '{tab_name}' header row "
+            f"documented in {N8N_SETUP_DOC.name}: {expected_columns}"
+        )
+
+        for column, expression in columns.get("value", {}).items():
+            assert "$json" not in expression, (
+                f"{node_name}: column {column!r} uses the bare, context-dependent $json "
+                f"({expression!r}) — this node's direct input is a Drive 'move' node, not "
+                "'Parse result', so it must reference the data source by name, e.g. "
+                "$('Parse result').item.json.<field>"
+            )
 
 
 def test_receivables_schedule_trigger_is_disabled_by_default():

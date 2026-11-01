@@ -131,14 +131,15 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "Date": "={{ $json.extraction.issue_date }}",
-            "Supplier": "={{ $json.supplier_match.canonical_name }}",
-            "Invoice Number": "={{ $json.extraction.invoice_number }}",
-            "Category": "={{ $json.category ? $json.category.category_code : '' }}",
-            "Standardised Filename": "={{ $json.standardised_filename }}",
-            "Drive Subfolder": "={{ $json.drive_subfolder }}",
-            "Original File": "={{ $json.drive_file_name }}",
-            "Status": "={{ $json.status }}"
+            "Date": "={{ $('Parse result').item.json.extraction.issue_date }}",
+            "Supplier": "={{ $('Parse result').item.json.supplier_match.canonical_name }}",
+            "Invoice Number": "={{ $('Parse result').item.json.extraction.invoice_number }}",
+            "Category": "={{ $('Parse result').item.json.category ? $('Parse result').item.json.category.category_code : '' }}",
+            "Standardised Filename": "={{ $('Parse result').item.json.standardised_filename }}",
+            "Drive Subfolder": "={{ $('Parse result').item.json.drive_subfolder }}",
+            "Original File": "={{ $('Parse result').item.json.drive_file_name }}",
+            "Status": "={{ $('Parse result').item.json.status }}",
+            "Drive Link": "={{ $('Rename + move to processed').item.json.webViewLink }}"
           }
         },
         "options": {}
@@ -185,10 +186,11 @@
           "mappingMode": "defineBelow",
           "value": {
             "Date": "={{ $now.toISODate() }}",
-            "Original File": "={{ $json.drive_file_name }}",
-            "Status": "={{ $json.status }}",
-            "Reasons": "={{ ($json.review_reasons || []).join('; ') }}",
-            "Error": "={{ $json.error || '' }}"
+            "Original File": "={{ $('Parse result').item.json.drive_file_name }}",
+            "Status": "={{ $('Parse result').item.json.status }}",
+            "Reasons": "={{ ($('Parse result').item.json.review_reasons || []).join('; ') }}",
+            "Error": "={{ $('Parse result').item.json.error || '' }}",
+            "Drive Link": "={{ $('Move to review').item.json.webViewLink }}"
           }
         },
         "options": {}

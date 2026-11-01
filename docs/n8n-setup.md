@@ -176,8 +176,8 @@ tabs and these exact header rows in row 1:
 
 | Tab name | Column headers (row 1) |
 | --- | --- |
-| `Ledger` | `Date`, `Supplier`, `Invoice Number`, `Category`, `Standardised Filename`, `Drive Subfolder`, `Original File`, `Status` |
-| `Review queue` | `Date`, `Original File`, `Status`, `Reasons`, `Error` |
+| `Ledger` | `Date`, `Supplier`, `Invoice Number`, `Category`, `Standardised Filename`, `Drive Subfolder`, `Original File`, `Status`, `Drive Link` |
+| `Review queue` | `Date`, `Original File`, `Status`, `Reasons`, `Error`, `Drive Link` |
 | `Reminders` | `Date`, `Invoice`, `Stage`, `Customer`, `Subject`, `Needs Review`, `Status` |
 
 ## 6. Import each workflow
