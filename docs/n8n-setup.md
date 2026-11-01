@@ -359,6 +359,22 @@ rather than trusting the name n8n shows after import — the JSON only
 carries a label, not the real spreadsheet/tab ID, until you re-select
 it once.
 
+**Re-picking the Document/Sheet on "Append to Ledger" or "Append to
+Review queue" empties the "Values to Send" box.** This is n8n itself,
+not something wrong with the JSON: the "Columns" field re-fetches its
+column list straight from row 1 of the live Sheet every time the
+Document or Sheet selection changes (that's what
+`loadOptionsDependsOn` on this field type does), and the editor clears
+the manual mapping when it does. There's no workflow-file setting that
+prevents this. Two things that help:
+1. Create the Sheet's header row (step 5) *before* you open this node,
+   so the column list n8n fetches already has every name it needs.
+2. Immediately after re-picking, switch "Mapping Column Mode" back to
+   "Map Each Column Manually" if it reset to "Map Automatically" (see
+   the note after step 6), and re-paste the column expressions —
+   they're listed in each node's `parameters.columns.value` in
+   `n8n/workflows/intake.json`, one n8n expression per column.
+
 **The intake workflow runs twice for one file, or Drive trigger fires
 on files you didn't just add.** The Google Drive Trigger node polls on
 a timer and can occasionally re-report a file if Drive's own "modified
