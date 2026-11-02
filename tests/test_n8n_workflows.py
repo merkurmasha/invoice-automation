@@ -17,13 +17,15 @@ from pathlib import Path
 WORKFLOWS_DIR = Path(__file__).resolve().parents[1] / "n8n" / "workflows"
 N8N_SETUP_DOC = Path(__file__).resolve().parents[1] / "docs" / "n8n-setup.md"
 
-# Google Sheets "append" nodes in intake.json whose columns must be
-# defined manually (never auto-mapped from whatever node happens to
-# feed them) and must match a documented Sheet tab 1:1. Keyed by node
-# name -> the tab name as it appears in n8n-setup.md's header table.
+# Google Sheets "append" nodes whose columns must be defined manually
+# (never auto-mapped from whatever node happens to feed them) and must
+# match a documented Sheet tab 1:1. Keyed by node name -> the workflow
+# file it lives in and the tab name as it appears in n8n-setup.md's
+# header table.
 _SHEETS_APPEND_NODES = {
-    "Append to Ledger": "Ledger",
-    "Append to Review queue": "Review queue",
+    "Append to Ledger": {"workflow": "intake.json", "tab": "Ledger"},
+    "Append to Review queue": {"workflow": "intake.json", "tab": "Review queue"},
+    "Append to Reminders": {"workflow": "receivables.json", "tab": "Reminders"},
 }
 
 # Each Sheets append node's "Drive Link" column has to build its URL from
@@ -141,10 +143,14 @@ def _documented_headers(tab_name: str) -> list[str]:
 
 
 def test_sheets_append_nodes_use_manual_mapping_matching_documented_headers():
-    workflow = json.loads((WORKFLOWS_DIR / "intake.json").read_text(encoding="utf-8"))
-    nodes_by_name = {n.get("name"): n for n in _iter_nodes(workflow)}
+    workflows_by_file = {
+        path.name: json.loads(path.read_text(encoding="utf-8")) for path in _workflow_files()
+    }
 
-    for node_name, tab_name in _SHEETS_APPEND_NODES.items():
+    for node_name, spec in _SHEETS_APPEND_NODES.items():
+        workflow = workflows_by_file[spec["workflow"]]
+        tab_name = spec["tab"]
+        nodes_by_name = {n.get("name"): n for n in _iter_nodes(workflow)}
         node = nodes_by_name[node_name]
         assert node.get("type") == "n8n-nodes-base.googleSheets", f"{node_name} is not a Google Sheets node"
 
@@ -165,10 +171,13 @@ def test_sheets_append_nodes_use_manual_mapping_matching_documented_headers():
         for column, expression in columns.get("value", {}).items():
             assert "$json" not in expression, (
                 f"{node_name}: column {column!r} uses the bare, context-dependent $json "
-                f"({expression!r}) — this node's direct input is a Drive 'move' node, not "
-                "'Parse result', so it must reference the data source by name, e.g. "
-                "$('Parse result').item.json.<field>"
+                f"({expression!r}) — this node's direct input is not the node whose data it "
+                "needs, so it must reference the data source by name, e.g. "
+                "$('Some other node').item.json.<field>"
             )
+
+        if node_name not in _DRIVE_LINK_SOURCE_NODE:
+            continue
 
         drive_link_expression = columns.get("value", {}).get("Drive Link", "")
         assert "webViewLink" not in drive_link_expression, (

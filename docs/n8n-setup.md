@@ -284,6 +284,42 @@ ls data/synthetic/invoices | head -3
    Sheet tab. **Do not click Send** — this is exactly the point of the
    exercise: confirming a draft was created, not sent.
 
+### Resetting between demo runs
+
+`scripts/receivables_today.py` never drafts the same (invoice, stage)
+reminder twice — ever, not just once per day. Every time it drafts
+one, it appends a row to `data/reminder_log.csv` (gitignored; columns
+`invoice_id,stage,drafted_on`), and the next run — today, tomorrow, or
+after a workflow re-import — skips anything already logged there.
+Running the workflow twice in a row on the same day and seeing nothing
+drafted the second time is this working correctly, not a bug.
+
+For a demo where you want to see drafts appear again, you have two
+options:
+
+- **Preview without touching the log:** run
+  `.venv/bin/python -m scripts.receivables_today --dry-run` (optionally
+  with `--today YYYY-MM-DD`). This still drafts for real — a real
+  Claude API call per due reminder — and prints the same JSON, but
+  never appends to `data/reminder_log.csv`, so you can re-run it as
+  many times as you like while rehearsing without using up anything.
+- **Actually reset the log**, so the *real* (non-dry-run) workflow
+  reports those reminders due again. Back it up first — this file is
+  the only record of what's already been sent, so never just delete
+  it:
+
+  ```bash
+  cp data/reminder_log.csv data/reminder_log.csv.bak   # skip if the file doesn't exist yet
+  rm data/reminder_log.csv
+  ```
+
+  The next run recreates it from scratch (see `record_drafted()` in
+  `src/receivables/schedule.py`). To restore your pre-demo state
+  afterwards: `cp data/reminder_log.csv.bak data/reminder_log.csv`.
+  Both files are gitignored, so none of this touches git history —
+  it's local working data, same category as `data/cache/` and
+  `data/drafts/`.
+
 **Test month_end_pack.json:**
 1. Click **Execute workflow** (the Manual Trigger's button).
 2. Confirm `data/packs/<month>/` was created locally (check with `ls

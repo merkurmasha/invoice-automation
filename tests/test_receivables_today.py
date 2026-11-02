@@ -154,6 +154,36 @@ def test_reminder_log_prevents_the_same_stage_being_drafted_twice(overdue_csv, t
     assert second_client.calls == 0
 
 
+def test_dry_run_drafts_without_touching_the_reminder_log(overdue_csv, tmp_path):
+    log_path = tmp_path / "reminder_log.csv"
+    client = FakeClient([VALID_RAW])
+
+    result = receivables_today_module.draft_due_reminders(
+        date(2026, 10, 1),
+        csv_path=overdue_csv,
+        log_path=log_path,
+        drafts_dir=tmp_path / "drafts",
+        client=client,
+        dry_run=True,
+    )
+
+    assert result["due_count"] == 1
+    assert not log_path.exists()
+
+    second_client = FakeClient([VALID_RAW])
+    second_result = receivables_today_module.draft_due_reminders(
+        date(2026, 10, 1),
+        csv_path=overdue_csv,
+        log_path=log_path,
+        drafts_dir=tmp_path / "drafts",
+        client=second_client,
+        dry_run=True,
+    )
+
+    assert second_result["due_count"] == 1
+    assert not log_path.exists()
+
+
 def test_draft_missing_required_facts_is_flagged_review(overdue_csv, tmp_path):
     client = FakeClient([MISSING_FACTS_RAW, MISSING_FACTS_RAW])
 
@@ -192,3 +222,29 @@ def test_main_exits_zero_for_pass(overdue_csv, tmp_path, monkeypatch, capsys):
     assert exit_code == 0
     out = capsys.readouterr().out
     assert '"status": "pass"' in out
+
+
+def test_main_dry_run_does_not_write_the_reminder_log(overdue_csv, tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        receivables_today_module.draft,
+        "_default_client",
+        lambda: FakeClient([VALID_RAW]),
+    )
+    log_path = tmp_path / "reminder_log.csv"
+
+    exit_code = receivables_today_module.main(
+        [
+            "--today",
+            "2026-10-01",
+            "--csv",
+            str(overdue_csv),
+            "--log-path",
+            str(log_path),
+            "--drafts-dir",
+            str(tmp_path / "drafts"),
+            "--dry-run",
+        ]
+    )
+
+    assert exit_code == 0
+    assert not log_path.exists()

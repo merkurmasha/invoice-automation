@@ -83,11 +83,11 @@
           "mappingMode": "defineBelow",
           "value": {
             "Date": "={{ $('Parse result').item.json.today }}",
-            "Invoice": "={{ $json.drafts.invoice }}",
-            "Stage": "={{ $json.drafts.stage }}",
-            "Customer": "={{ $json.drafts.to }}",
-            "Subject": "={{ $json.drafts.subject }}",
-            "Needs Review": "={{ $json.drafts.needs_review }}",
+            "Invoice": "={{ $('Split drafts').item.json.drafts.invoice }}",
+            "Stage": "={{ $('Split drafts').item.json.drafts.stage }}",
+            "Customer": "={{ $('Split drafts').item.json.drafts.to }}",
+            "Subject": "={{ $('Split drafts').item.json.drafts.subject }}",
+            "Needs Review": "={{ $('Split drafts').item.json.drafts.needs_review }}",
             "Status": "DRAFTED - awaiting human send"
           }
         },
