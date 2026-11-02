@@ -81,6 +81,24 @@ Supplier matching and categorisation were both tuned against the synthetic set, 
 - **The month-end pack uses the synthetic answer key's categories and canonical supplier names**, not the categoriser's own live output — it's a demo of the pack format, not a live bookkeeping run.
 - **Filenames aren't actually changed.** `scripts/process_invoice.py` computes a standardised filename and writes it into the intake sheet/ledger, but the source file in Drive keeps its original name (the month-end pack's own `documents/` copies are the one place files get renamed).
 
+## What works today
+
+- Drop a supplier invoice into the Drive inbox. Within about a minute it's read, validated, and filed — a clean invoice gets a Ledger row, a problem invoice gets a Review queue row with the reason.
+- Drop the same invoice twice. Duplicate detection catches it and sends the second copy to review.
+- Run the receivables workflow. It drafts Gmail reminders for overdue customer invoices. Nothing is sent automatically.
+- Run the month-end workflow. A 13-file accountant pack lands in a Drive folder.
+- Open the live dashboard, or run the offline evaluations to reproduce every number in the Results table above.
+
+## What is missing
+
+- **The live and demo paths don't connect.** The inbox flow writes to Ledger and Review queue tabs in Google Sheets, but nothing reads them back — receivables, reconciliation, the pack, and the dashboard all still read static synthetic files.
+- **The Review queue has no approve step.** Resolving an item still means fixing it, adding it to the Ledger, and moving the file by hand.
+- **Receivables run off a fixed invoice list**, and nothing tracks a reminder's status past "Drafted" to "Sent" or "Paid".
+- **The bank statement is a fixed file**, and the month-end pack uses the synthetic answer key's categories and names, not the live categoriser's output.
+- **State lives on one laptop.** The supplier master and duplicate memory are local files, and two separate review queue implementations exist that never reconcile with each other.
+
+See the [case study](docs/case-study.md) for the full list, what broke along the way, and what's being built next.
+
 ## How to run
 
 ```bash
