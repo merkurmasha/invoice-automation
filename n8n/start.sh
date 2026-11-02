@@ -21,14 +21,20 @@
 #     only commands it runs are the fixed ones hardcoded into the
 #     workflow JSON files you import yourself, and nothing in this repo
 #     lets an external request reach n8n in the first place.
-#   - N8N_RESTRICT_FILE_ACCESS_TO is set to n8n/data/inbox-tmp/ — the
-#     only folder any node's file read/write operations are allowed to
-#     touch. The intake workflow's "Write to temp folder" node downloads
-#     each Drive file there before handing it to process_invoice.py.
-#     This folder lives inside n8n/data/ (gitignored, same as the user
-#     folder above), not macOS's /tmp, because /tmp is cleared on every
-#     reboot and n8n would otherwise refuse to write there anyway once
-#     this restriction is set.
+#   - N8N_RESTRICT_FILE_ACCESS_TO is set to n8n/data/inbox-tmp/ and
+#     data/packs/ (n8n accepts several paths separated by semicolons) —
+#     the only folders any node's file read/write operations are
+#     allowed to touch. The intake workflow's "Write to temp folder"
+#     node downloads each Drive file into inbox-tmp/ before handing it
+#     to process_invoice.py; inbox-tmp/ lives inside n8n/data/
+#     (gitignored, same as the user folder above), not macOS's /tmp,
+#     because /tmp is cleared on every reboot and n8n would otherwise
+#     refuse to write there anyway once this restriction is set.
+#     data/packs/ is where scripts/build_pack.py writes each month-end
+#     pack, and the month-end-pack workflow's "Read file" node needs to
+#     read those files back out before uploading them to Drive — so
+#     that folder is allowed too, and nothing wider (not the whole
+#     repo, not the home folder).
 #
 # Does NOT install n8n - run `n8n --version` first; if that fails, see
 # docs/n8n-setup.md's "Install n8n" section before running this script.
@@ -56,9 +62,10 @@ export N8N_BLOCK_ENV_ACCESS_IN_NODE=false
 
 INBOX_TMP_FOLDER="$REPO_ROOT/n8n/data/inbox-tmp"
 export INBOX_TMP_FOLDER
-export N8N_RESTRICT_FILE_ACCESS_TO="$INBOX_TMP_FOLDER"
+PACKS_FOLDER="$REPO_ROOT/data/packs"
+export N8N_RESTRICT_FILE_ACCESS_TO="$INBOX_TMP_FOLDER;$PACKS_FOLDER"
 
-mkdir -p "$N8N_USER_FOLDER" "$INBOX_TMP_FOLDER"
+mkdir -p "$N8N_USER_FOLDER" "$INBOX_TMP_FOLDER" "$PACKS_FOLDER"
 
 echo "Repo root:    $REPO_ROOT"
 echo "Data folder:  $N8N_USER_FOLDER"

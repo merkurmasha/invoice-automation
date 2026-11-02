@@ -65,11 +65,14 @@ things before starting n8n:
   Since this n8n only listens on localhost and only ever runs the
   three fixed commands baked into the workflow JSON files you import
   yourself, re-enabling it here is safe.
-- Restricts every node's file read/write operations to a single
-  folder, `n8n/data/inbox-tmp/` (created automatically, gitignored).
-  The intake workflow's "Write to temp folder" node downloads each
-  Drive file there before `process_invoice.py` reads it, and this
-  setting stops any node — including a misconfigured one — from
+- Restricts every node's file read/write operations to two folders:
+  `n8n/data/inbox-tmp/` (created automatically, gitignored) and
+  `data/packs/` (also created automatically). The intake workflow's
+  "Write to temp folder" node downloads each Drive file into
+  `inbox-tmp/` before `process_invoice.py` reads it; the month-end-pack
+  workflow's "Read file" node reads the pack files `build_pack.py`
+  wrote into `data/packs/<month>/` before uploading them to Drive.
+  This setting stops any node — including a misconfigured one — from
   writing anywhere else on your Mac.
 
 Once it's running, open **http://localhost:5678** in your browser and
@@ -387,16 +390,22 @@ Executions tab.** The node's command is missing the `--n8n` flag — see
 step 6 above. Re-open the node and confirm the command ends in
 `--n8n ' + $json.fileName`, not just `' + $json.fileName`.
 
-**"Write to temp folder" fails with "The file ... is not writable" (or
-any other node fails to read/write a path outside `n8n/data/inbox-tmp/`).**
-`n8n/start.sh` sets `N8N_RESTRICT_FILE_ACCESS_TO` to that one folder, so
-every node's file access is confined to it — this is expected if a
-node's path points anywhere else (e.g. `/tmp`, which macOS clears on
-reboot and which this project never writes to for that reason). If you
-imported `intake.json` before this restriction existed, re-open the
-"Write to temp folder" node and confirm its "File Name" field reads
+**"Write to temp folder" fails with "The file ... is not writable", or
+a node fails with "Access to the file is not allowed. Allowed paths:
+..." (any node failing to read/write a path outside `n8n/data/inbox-tmp/`
+or `data/packs/`).** `n8n/start.sh` sets `N8N_RESTRICT_FILE_ACCESS_TO`
+to those two folders (semicolon-separated), so every node's file access
+is confined to them — this is expected if a node's path points anywhere
+else (e.g. `/tmp`, which macOS clears on reboot and which this project
+never writes to for that reason). If you imported `intake.json` before
+this restriction existed, re-open the "Write to temp folder" node and
+confirm its "File Name" field reads
 `={{ $env.INBOX_TMP_FOLDER + '/' + $json.name }}`, not a literal `/tmp/...`
-path.
+path. If it's the month-end-pack workflow's "Read file" node failing on
+a `data/packs/...` path, make sure you restarted n8n with the current
+`n8n/start.sh` (it only allows `data/packs/` as of the version that
+added that path to `N8N_RESTRICT_FILE_ACCESS_TO`) — fully stop and
+restart n8n, since this variable is only read at startup.
 
 **A Google node fails with `403` or "access blocked: this app's
 request is invalid".** Almost always one of: the redirect URI in your
