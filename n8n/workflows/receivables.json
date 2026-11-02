@@ -1,0 +1,110 @@
+{
+  "name": "Receivables reminders",
+  "active": false,
+  "nodes": [
+    {
+      "id": "9d8b721e-8ec7-4009-aade-99b8ae7664a2",
+      "name": "Daily 09:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-640, 0],
+      "disabled": true,
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "days", "daysInterval": 1, "triggerAtHour": 9, "triggerAtMinute": 0 }
+          ]
+        }
+      }
+    },
+    {
+      "id": "2a5eb64a-f888-41ba-a3b6-6038361da0ac",
+      "name": "Run receivables_today.py",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [-420, 0],
+      "parameters": {
+        "command": "={{ 'cd ' + $env.INVOICE_AUTOMATION_REPO + ' && .venv/bin/python -m scripts.receivables_today' }}"
+      }
+    },
+    {
+      "id": "3d66b757-c986-4856-904a-4ab0c000a71d",
+      "name": "Parse result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-200, 0],
+      "parameters": {
+        "jsCode": "return [{ json: JSON.parse($input.item.json.stdout) }];"
+      }
+    },
+    {
+      "id": "19fb230b-f90e-4bc7-8c3e-0d26d368ab74",
+      "name": "Split drafts",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [20, 0],
+      "parameters": {
+        "fieldToSplitOut": "drafts",
+        "options": {}
+      }
+    },
+    {
+      "id": "57f35b48-34bb-47a8-95c3-6ef1cada5724",
+      "name": "Create draft",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [240, -80],
+      "parameters": {
+        "resource": "draft",
+        "operation": "create",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.body }}",
+        "options": {}
+      },
+      "notesInFlow": true,
+      "notes": "Recipient is left blank on purpose — this project's synthetic sales_invoices.csv only has a customer NAME (see $json.to), not a real email address. Look the customer up and fill in the To field in Gmail before sending.",
+      "credentials": {
+        "gmailOAuth2Api": { "id": "", "name": "Gmail account" }
+      }
+    },
+    {
+      "id": "6ec3cc9a-16a0-4bd0-ba4f-dab7bd6246f5",
+      "name": "Append to Reminders",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [460, -80],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "append",
+        "documentId": { "__rl": true, "mode": "list", "value": "", "cachedResultName": "Invoice Automation" },
+        "sheetName": { "__rl": true, "mode": "list", "value": "", "cachedResultName": "Reminders" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $now.toISODate() }}",
+            "Invoice": "={{ $('Split drafts').item.json.invoice }}",
+            "Stage": "={{ $('Split drafts').item.json.stage }}",
+            "Customer": "={{ $('Split drafts').item.json.to }}",
+            "Subject": "={{ $('Split drafts').item.json.subject }}",
+            "Needs Review": "={{ $('Split drafts').item.json.needs_review }}",
+            "Status": "Drafted"
+          }
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": { "id": "", "name": "Google Sheets account" }
+      }
+    }
+  ],
+  "connections": {
+    "Daily 09:00": { "main": [[{ "node": "Run receivables_today.py", "type": "main", "index": 0 }]] },
+    "Run receivables_today.py": { "main": [[{ "node": "Parse result", "type": "main", "index": 0 }]] },
+    "Parse result": { "main": [[{ "node": "Split drafts", "type": "main", "index": 0 }]] },
+    "Split drafts": { "main": [[{ "node": "Create draft", "type": "main", "index": 0 }]] },
+    "Create draft": { "main": [[{ "node": "Append to Reminders", "type": "main", "index": 0 }]] }
+  },
+  "pinData": {},
+  "settings": { "executionOrder": "v1" }
+}

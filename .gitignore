@@ -224,8 +224,14 @@ __marimo__/
 data/cache/
 data/review_queue.csv
 data/reminder_log.csv
+data/**/*.bak
 data/drafts/
 data/reconcile/
 data/packs/
+data/suppliers.csv
 evals/results/*.tmp
 .DS_Store
+
+# n8n (phase 8): local data folder — holds the SQLite DB, credentials
+# and the encryption key used to decrypt them. Never commit this.
+n8n/data/

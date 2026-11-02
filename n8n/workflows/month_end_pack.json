@@ -1,0 +1,97 @@
+{
+  "name": "Month-end accountant pack",
+  "nodes": [
+    {
+      "id": "65c2f8be-5d60-418c-8c8a-7adbea844349",
+      "name": "When clicking 'Execute workflow'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-640, 0],
+      "parameters": {}
+    },
+    {
+      "id": "3f5145ee-3589-456a-ac2d-8117fa391435",
+      "name": "Set month",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-420, 0],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9bdc6cfa-898e-4fe1-8bc0-aa8e34193b41",
+              "name": "month",
+              "type": "string",
+              "value": "={{ $now.minus({ months: 1 }).format('yyyy-MM') }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "60974db9-89e1-4a4b-b343-e64e5a114ce2",
+      "name": "Run build_pack.py",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [-200, 0],
+      "parameters": {
+        "command": "={{ 'cd ' + $env.INVOICE_AUTOMATION_REPO + ' && .venv/bin/python -m scripts.build_pack ' + $json.month }}"
+      }
+    },
+    {
+      "id": "4b6ff9a6-ff90-444f-acda-adbc49c6bc50",
+      "name": "List files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [20, 0],
+      "parameters": {
+        "jsCode": "const parsed = JSON.parse($input.item.json.stdout);\nif (parsed.status !== 'ok') {\n  throw new Error('build_pack failed: ' + parsed.error);\n}\nreturn parsed.files.map((filePath) => ({ json: { filePath, month: parsed.month } }));"
+      }
+    },
+    {
+      "id": "0fc48f8f-ad3a-45c0-845c-cc2afd3b42e6",
+      "name": "Read file",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [240, 0],
+      "parameters": {
+        "operation": "read",
+        "fileSelector": "={{ $json.filePath }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "b2404109-48a7-4299-90d3-20e8e817c441",
+      "name": "Upload to Accountant-Packs",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [460, 0],
+      "parameters": {
+        "resource": "file",
+        "operation": "upload",
+        "name": "={{ $json.month + '/' + $json.filePath.split('/').slice(-2).join('/') }}",
+        "driveId": { "__rl": true, "mode": "list", "value": "My Drive", "cachedResultName": "My Drive" },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "Accountant-Packs"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleDriveOAuth2Api": { "id": "", "name": "Google Drive account" }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking 'Execute workflow'": { "main": [[{ "node": "Set month", "type": "main", "index": 0 }]] },
+    "Set month": { "main": [[{ "node": "Run build_pack.py", "type": "main", "index": 0 }]] },
+    "Run build_pack.py": { "main": [[{ "node": "List files", "type": "main", "index": 0 }]] },
+    "List files": { "main": [[{ "node": "Read file", "type": "main", "index": 0 }]] },
+    "Read file": { "main": [[{ "node": "Upload to Accountant-Packs", "type": "main", "index": 0 }]] }
+  },
+  "pinData": {},
+  "settings": { "executionOrder": "v1" }
+}
