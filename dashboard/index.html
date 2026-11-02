@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Costa Brava Studio S.L. — Dashboard</title>
+<style>:root {
+  color-scheme: light;
+  --surface-page: #f9f9f7;
+  --surface-card: #fcfcfb;
+  --ink-primary: #0b0b0b;
+  --ink-secondary: #52514e;
+  --ink-muted: #898781;
+  --gridline: #e1e0d9;
+  --border: rgba(11,11,11,0.10);
+  --cat-1: #2a78d6; --cat-2: #eb6834; --cat-3: #1baf7a; --cat-4: #eda100;
+  --cat-5: #e87ba4; --cat-6: #008300; --cat-7: #6250d6; --cat-8: #e34948;
+  --status-good: #0ca30c; --status-warning: #fab219;
+  --status-serious: #ec835a; --status-critical: #d03b3b;
+  --status-good-label: #ffffff; --status-warning-label: #0b0b0b;
+  --status-serious-label: #ffffff; --status-critical-label: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --surface-page: #0d0d0d;
+    --surface-card: #1a1a19;
+    --ink-primary: #f0efec;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+    --gridline: #2c2c2a;
+    --border: rgba(255,255,255,0.10);
+    --cat-1: #3987e5; --cat-2: #d95926; --cat-3: #199e70; --cat-4: #c98500;
+    --cat-5: #d55181; --cat-6: #008300; --cat-7: #9085e9; --cat-8: #e66767;
+    --status-warning-label: #0b0b0b;
+  }
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; background: var(--surface-page); color: var(--ink-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+body { padding: 16px; max-width: 1100px; margin: 0 auto; }
+h1, h2, h3 { font-weight: 600; margin: 0; }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.05rem; margin-bottom: 4px; }
+p { margin: 4px 0; }
+.muted { color: var(--ink-muted); font-size: 0.85rem; }
+.secondary { color: var(--ink-secondary); }
+header.top {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: 8px; padding: 16px 0 8px 0; border-bottom: 1px solid var(--gridline); margin-bottom: 16px;
+}
+.stat-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;
+}
+@media (max-width: 720px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+.stat-tile {
+  background: var(--surface-card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px; min-width: 0;
+}
+.stat-tile .value { font-size: 1.6rem; font-weight: 600; line-height: 1.2; }
+.stat-tile .label { font-size: 0.8rem; color: var(--ink-secondary); margin-top: 2px; }
+.panel {
+  background: var(--surface-card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 16px; margin-bottom: 20px;
+}
+.panel-head { margin-bottom: 12px; }
+.bar-row { display: grid; grid-template-columns: 180px 1fr auto; align-items: center; gap: 10px; margin: 8px 0; }
+@media (max-width: 720px) { .bar-row { grid-template-columns: 110px 1fr auto; font-size: 0.85rem; } }
+.bar-label { color: var(--ink-primary); overflow-wrap: anywhere; }
+.bar-track { background: var(--gridline); border-radius: 4px; height: 18px; position: relative; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px 0 0 4px; }
+.bar-value { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink-secondary); }
+table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--gridline); vertical-align: top; }
+th { color: var(--ink-secondary); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.02em; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.table-wrap { overflow-x: auto; }
+.badge {
+  display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px;
+  font-size: 0.78rem; font-weight: 600; white-space: nowrap;
+}
+.badge-good { background: var(--status-good); color: var(--status-good-label); }
+.badge-warning { background: var(--status-warning); color: var(--status-warning-label); }
+.badge-serious { background: var(--status-serious); color: var(--status-serious-label); }
+.badge-critical { background: var(--status-critical); color: var(--status-critical-label); }
+.bucket-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+@media (max-width: 720px) { .bucket-grid { grid-template-columns: repeat(2, 1fr); } }
+.bucket-card { border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+.bucket-card .count { font-size: 1.3rem; font-weight: 600; }
+.recon-bar { display: flex; height: 22px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); margin: 10px 0; }
+.recon-seg-matched { background: var(--status-good); }
+.recon-seg-review { background: var(--status-warning); }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.85rem; color: var(--ink-secondary); margin-bottom: 4px; }
+.legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+.accuracy-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+@media (max-width: 960px) { .accuracy-grid { grid-template-columns: repeat(2, 1fr); } }
+.accuracy-tile .value { font-size: 1.3rem; font-weight: 600; }
+.accuracy-tile .sub { font-size: 0.72rem; color: var(--ink-muted); margin-top: 2px; }
+footer { color: var(--ink-muted); font-size: 0.8rem; padding: 16px 0; border-top: 1px solid var(--gridline); margin-top: 8px; }
+.empty { color: var(--ink-muted); font-style: italic; font-size: 0.9rem; }</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Costa Brava Studio S.L.</h1>
+    <p class="muted">Operations dashboard — October 2026 (as of 2026-10-28)</p>
+    <p class="muted">"2026-10-28" is a fixed demo date, not live — the bank statement below runs
+    through 2026-11-06.</p>
+  </div>
+</header>
+<div class="stat-grid"><div class="stat-tile"><div class="value">EUR 1,677.47</div><div class="label">Total spend — October 2026</div></div><div class="stat-tile"><div class="value">EUR 23,107.68</div><div class="label">Open receivables — whole book</div></div><div class="stat-tile"><div class="value">2</div><div class="label">In review queue — October 2026</div></div><div class="stat-tile"><div class="value">86.5%</div><div class="label">Reconciliation match rate — whole statement</div></div></div>
+
+<section class="panel">
+  <div class="panel-head"><h2>Spend by category</h2><p class="muted">October 2026 — supplier invoices issued that month</p></div>
+  <div class="bar-row"><div class="bar-label">Coworking &amp; Office Space</div><div class="bar-track"><div class="bar-fill" style="width:100.0%;background:var(--cat-2);"></div></div><div class="bar-value">EUR 477.39</div></div><div class="bar-row"><div class="bar-label">Printing &amp; Supplies</div><div class="bar-track"><div class="bar-fill" style="width:52.0%;background:var(--cat-4);"></div></div><div class="bar-value">EUR 248.05</div></div><div class="bar-row"><div class="bar-label">Travel</div><div class="bar-track"><div class="bar-fill" style="width:48.2%;background:var(--cat-6);"></div></div><div class="bar-value">EUR 229.90</div></div><div class="bar-row"><div class="bar-label">Utilities</div><div class="bar-track"><div class="bar-fill" style="width:48.0%;background:var(--cat-7);"></div></div><div class="bar-value">EUR 228.93</div></div><div class="bar-row"><div class="bar-label">Accounting &amp; Legal</div><div class="bar-track"><div class="bar-fill" style="width:45.6%;background:var(--cat-1);"></div></div><div class="bar-value">EUR 217.80</div></div><div class="bar-row"><div class="bar-label">Office Supplies</div><div class="bar-track"><div class="bar-fill" style="width:32.3%;background:var(--cat-3);"></div></div><div class="bar-value">EUR 154.40</div></div><div class="bar-row"><div class="bar-label">Software &amp; Subscriptions</div><div class="bar-track"><div class="bar-fill" style="width:25.3%;background:var(--cat-5);"></div></div><div class="bar-value">EUR 121.00</div></div>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>Receivables aging</h2><p class="muted">Whole book, as of 2026-10-28 — not just October 2026</p></div>
+  <div class="bucket-grid"><div class="bucket-card"><div class="badge badge-good">● Current</div><div class="count">3</div><div class="secondary">EUR 6,171.14 outstanding</div></div><div class="bucket-card"><div class="badge badge-warning">▲ 1–30 days overdue</div><div class="count">2</div><div class="secondary">EUR 4,414.64 outstanding</div></div><div class="bucket-card"><div class="badge badge-serious">▲ 31–60 days overdue</div><div class="count">2</div><div class="secondary">EUR 4,993.93 outstanding</div></div><div class="bucket-card"><div class="badge badge-critical">■ 60+ days overdue</div><div class="count">2</div><div class="secondary">EUR 7,527.97 outstanding</div></div></div>
+  <p class="muted">Reminder stages: stage 1 (First reminder) on the due date; stage 2 (Second reminder) 7 day(s) after the due date; stage 3 (Final notice) 14 day(s) after the due date — only the latest stage that's come due and hasn't been sent yet is ever shown for an invoice.</p>
+  <div class="table-wrap">
+<table>
+<thead><tr><th>Invoice</th><th>Customer</th><th>Due</th><th class="num">Days overdue</th>
+<th class="num">Outstanding</th><th>Bucket</th><th>Reminder stage</th></tr></thead>
+<tbody><tr><td>CBS-2026-0011</td><td>Immobiliària Costa Clara</td><td>2026-08-01</td><td class="num">88</td><td class="num">EUR 3,852.95</td><td><span class="badge badge-critical">60+ days overdue</span></td><td>Final notice (stage 3)</td></tr><tr><td>CBS-2026-0012</td><td>Escola d&#x27;Idiomes Babel</td><td>2026-08-20</td><td class="num">69</td><td class="num">EUR 3,675.02</td><td><span class="badge badge-critical">60+ days overdue</span></td><td>Final notice (stage 3)</td></tr><tr><td>CBS-2026-0008</td><td>Estudi Fotogràfic Lux</td><td>2026-09-10</td><td class="num">48</td><td class="num">EUR 2,820.70</td><td><span class="badge badge-serious">31–60 days overdue</span></td><td>Final notice (stage 3)</td></tr><tr><td>CBS-2026-0009</td><td>Perruqueria Nova Imatge</td><td>2026-09-20</td><td class="num">38</td><td class="num">EUR 2,173.23</td><td><span class="badge badge-serious">31–60 days overdue</span></td><td>Final notice (stage 3)</td></tr><tr><td>CBS-2026-0005</td><td>Llibreria Horitzons</td><td>2026-10-12</td><td class="num">16</td><td class="num">EUR 757.78</td><td><span class="badge badge-warning">1–30 days overdue</span></td><td>Final notice (stage 3)</td></tr><tr><td>CBS-2026-0006</td><td>Restaurant Can Pla</td><td>2026-10-20</td><td class="num">8</td><td class="num">EUR 3,656.86</td><td><span class="badge badge-warning">1–30 days overdue</span></td><td>Second reminder (stage 2)</td></tr></tbody>
+</table>
+</div>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>Review queue</h2><p class="muted">October 2026 — invoices a human needs to look at before they're filed</p></div>
+  <div class="table-wrap">
+<table>
+<thead><tr><th>Invoice</th><th>Supplier</th><th>Issue date</th><th>Why it needs a human</th></tr></thead>
+<tbody><tr><td>ADB/2026/CN07704</td><td>Adobe Inc.</td><td>2026-10-15</td><td>due_date is missing — confirm payment terms with the supplier.</td></tr><tr><td>VB-2026-0009</td><td>Viatges Business, S.L.</td><td>2026-10-20</td><td>due_date is missing — confirm payment terms with the supplier.</td></tr></tbody>
+</table>
+</div>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>Bank reconciliation</h2><p class="muted">Whole bank statement period</p></div>
+  <p class="secondary">37 bank lines in this statement — 86.5% matched automatically; the rest goes to a human to confirm.</p><span class="legend"><span><span class="legend-dot" style="background:var(--status-good)"></span>Matched automatically (32)</span><span><span class="legend-dot" style="background:var(--status-warning)"></span>Needs a human (5)</span></span><div class="recon-bar"><div class="recon-seg-matched" style="width:86.5%"></div><div class="recon-seg-review" style="width:13.5%"></div></div><div class="table-wrap">
+<table>
+<thead><tr><th>Bank date</th><th>Description</th><th class="num">Amount</th><th>Status</th><th>Invoice(s)</th><th>Why</th></tr></thead>
+<tbody><tr><td>2026-08-22</td><td>MISSATGERI FACT</td><td class="num">−EUR 67.15</td><td>Possible match</td><td>MG-00041</td><td>Score 84/100: amount matches invoice MG-00041 in full (67.15); the name matches the reference text (73% similarity); the payment date is close to the due date.</td></tr><tr><td>2026-09-30</td><td>TRANSFERENCIA ENERGIA</td><td class="num">−EUR 191.11</td><td>Possible match</td><td>F-2026-009903</td><td>Score 79/100: amount matches invoice F-2026-009903 in full (191.11); the name matches the reference text (60% similarity); the payment date is close to the due date.</td></tr><tr><td>2026-09-30</td><td>TRANSFERENCIA CAFÉ</td><td class="num">−EUR 58.69</td><td>Possible match</td><td>CC-00071</td><td>Score 76/100: amount matches invoice CC-00071 in full (58.69); the name matches the reference text (53% similarity); the payment date is close to the due date.</td></tr><tr><td>2026-09-30</td><td>COMISSIONS BANCARIES TRIMESTRALS</td><td class="num">−EUR 12.50</td><td>Unmatched</td><td>—</td><td>No open invoice (or combination of invoices) explains this amount.</td></tr><tr><td>2026-10-31</td><td>TRANSFERENCIA ENERGIA</td><td class="num">−EUR 156.45</td><td>Possible match</td><td>F-2026-009904</td><td>Score 79/100: amount matches invoice F-2026-009904 in full (156.45); the name matches the reference text (60% similarity); the payment date is close to the due date.</td></tr></tbody>
+</table>
+</div>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>Accuracy</h2><p class="muted">From this project's own evaluation runs (see evals/)</p></div>
+  <div class="accuracy-grid"><div class="stat-tile accuracy-tile"><div class="value">97.4% → 100.0%</div><div class="label">Extraction (synthetic)</div><div class="sub">field-level accuracy, prompt v1 → v2</div></div><div class="stat-tile accuracy-tile"><div class="value">98.6%</div><div class="label">Extraction (held-out)</div><div class="sub">documents never used while building the prompt</div></div><div class="stat-tile accuracy-tile"><div class="value">87.0%</div><div class="label">Categorisation (synthetic)</div><div class="sub">category assigned correctly</div></div><div class="stat-tile accuracy-tile"><div class="value">64.3%</div><div class="label">Categorisation (held-out)</div><div class="sub">category assigned correctly</div></div><div class="stat-tile accuracy-tile"><div class="value">36/36</div><div class="label">Reconciliation (test set)</div><div class="sub">0 false matches</div></div></div><p class="muted">Read live from this project's own eval result files in evals/results/ — see evals/ for the harness that produced them.</p><p class="muted">Categorisation and matching were tuned on synthetic data; the held-out figures are the fairer measure.</p>
+</section>
+
+<footer>
+  <p>Built from this project's synthetic data (demo date 2026-10-28, month October 2026).</p>
+  <p>Synthetic data. Nothing in this project is sent automatically; reminders are Gmail drafts a human approves.</p>
+</footer>
+</body>
+</html>

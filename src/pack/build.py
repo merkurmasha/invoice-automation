@@ -40,7 +40,7 @@ from src.reconcile import config as reconcile_config
 from src.reconcile import exceptions as exceptions_module
 from src.reconcile import ledger, match
 from src.validate.duplicates import DuplicateDetector
-from src.validate.validate import validate_invoice
+from src.validate.validate import ValidationResult, validate_invoice
 
 from . import config
 
@@ -112,23 +112,36 @@ def _to_extracted(entry: dict) -> ExtractedInvoice:
     )
 
 
-def validation_statuses(answer_key_entries: list[dict]) -> dict[str, str]:
+def validation_results(answer_key_entries: list[dict]) -> dict[str, ValidationResult]:
     """Runs every answer-key entry, IN ORDER, through the real
     src.validate.validate.validate_invoice() against a fresh, in-memory
     DuplicateDetector (never the committed cache) - exactly how the
     real pipeline would see them arrive one at a time. Returns
-    invoice_number -> "pass"/"review" for the FIRST entry seen for each
+    invoice_number -> ValidationResult for the FIRST entry seen for each
     invoice_number, matching the same first-entry-wins dedup rule
     src.reconcile.ledger uses, so a bad near-duplicate reading never
-    taints the ledger row for the real invoice."""
+    taints the ledger row for the real invoice.
+
+    Keeps the full result (not just .status) so a caller that needs to
+    show a human *why* an invoice needs review - e.g. the dashboard's
+    review-queue panel - doesn't have to re-run validation itself."""
     with tempfile.TemporaryDirectory(prefix="pack_duplicates_") as tmp_dir:
         detector = DuplicateDetector(cache_path=Path(tmp_dir) / "seen_invoices.json")
-        statuses: dict[str, str] = {}
+        results: dict[str, ValidationResult] = {}
         for entry in answer_key_entries:
             extracted = _to_extracted(entry)
             result = validate_invoice(extracted, detector, today=date.fromisoformat(config.DEFAULT_TODAY))
-            statuses.setdefault(entry["invoice_number"], result.status)
-        return statuses
+            results.setdefault(entry["invoice_number"], result)
+        return results
+
+
+def validation_statuses(answer_key_entries: list[dict]) -> dict[str, str]:
+    """Same as validation_results(), but just the "pass"/"review" status -
+    what build_ledger_rows() needs for ledger.csv."""
+    return {
+        invoice_number: result.status
+        for invoice_number, result in validation_results(answer_key_entries).items()
+    }
 
 
 def _month_matches(d: date, month: str) -> bool:
