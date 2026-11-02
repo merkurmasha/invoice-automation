@@ -20,7 +20,7 @@ The third part is the human. Nothing is sent automatically. Reminders are Gmail 
 
 ## How it works
 
-- **Intake.** A file dropped into a Drive folder is picked up, read by the model and validated by code. Invoices that pass go to a Processed folder and a Ledger row. Invoices that fail go to a Review folder and a Review queue row, with the reason ("due date is missing").
+- **Intake.** A file dropped into a Drive folder is picked up, read by the model and validated by code. Invoices that pass go to a Processed folder and a Ledger row. Invoices that fail go to a Review folder and a Review queue row, with the reason (due date is missing).
 - **Suppliers and categories.** Fuzzy matching joins "Adobe Inc." and "Adobe Systems Software Ireland Ltd" into one supplier. The model suggests a category and flags how sure it is.
 - **Receivables.** This covers invoices the studio issues to its customers, read from a fixed list. Each day, code works out how overdue each one is and which reminder stage it has reached. The model writes the wording. A Gmail draft appears for me to review. A reminder log stops the same reminder from being drafted twice.
 - **Reconciliation.** Each bank line is matched to invoices by amount, name and date. Every match carries a score and a plain-language reason. Uncertain ones are marked "possible match" for a human.
