@@ -1,5 +1,7 @@
 # Case study: invoice automation for a small studio
 
+Version 1.0, November 2026
+
 ## The problem
 
 Costa Brava Studio S.L. is a fictional design studio with the finance problems of a real one. Invoices arrive as PDFs and photos. Someone types them into a spreadsheet. Late payers get chased when someone remembers. At month end the accountant receives a pile of files and sends back questions.
@@ -8,7 +10,7 @@ I built a pipeline for that workflow. It reads each invoice, checks it, files it
 
 All data is synthetic. No real company, customer or bank account is involved.
 
-**Status: a working version one with known gaps.** Each stage works and is tested. The stages are not yet joined into one closed loop for a real month. This page says what works, what is missing and what I am building next.
+**Status: version 1.0, a working version with known gaps.** Each stage works and is tested. The stages are not yet joined into one closed loop for a real month. This page says what works, what is missing and what I am building next.
 
 ## The design rule
 
@@ -20,8 +22,8 @@ The third part is the human. Nothing is sent automatically. Reminders are Gmail 
 
 ## How it works
 
-- **Intake.** A file dropped into a Drive folder is picked up, read by the model and validated by code. Invoices that pass go to a Processed folder and a Ledger row. Invoices that fail go to a Review folder and a Review queue row, with the reason (due date is missing).
-- **Suppliers and categories.** Fuzzy matching joins "Adobe Inc." and "Adobe Systems Software Ireland Ltd" into one supplier. The model suggests a category and flags how sure it is.
+- **Intake.** A file dropped into a Drive folder is picked up, read by the model and validated by code. Invoices that pass go to a Processed folder and a Ledger row. Invoices that fail go to a Review folder and a Review queue row, with the reason written out, for example that the due date is missing.
+- **Suppliers and categories.** Fuzzy matching joins "Adobe Inc." and "Adobe Systems Software Ireland Ltd." into one supplier. The model suggests a category and flags how sure it is.
 - **Receivables.** This covers invoices the studio issues to its customers, read from a fixed list. Each day, code works out how overdue each one is and which reminder stage it has reached. The model writes the wording. A Gmail draft appears for me to review. A reminder log stops the same reminder from being drafted twice.
 - **Reconciliation.** Each bank line is matched to invoices by amount, name and date. Every match carries a score and a plain-language reason. Uncertain ones are marked "possible match" for a human.
 - **Month-end pack.** One command builds the 13 files the accountant needs. In this version it builds them from the project's synthetic data, not from the live Ledger (see "What is missing in the workflow").
@@ -31,7 +33,7 @@ The same steps run as three n8n workflows: intake, daily receivables and month-e
 
 ## What I built
 
-I built it in phases, each merged through a pull request with CI passing: synthetic data first, then extraction, validation, an evaluation harness, suppliers and categories, receivables, reconciliation together with the month-end pack, the n8n workflows and the dashboard. The repo has 266 tests.
+I built it in phases, each merged through a pull request with CI passing: setup and synthetic data first, then extraction, validation, an evaluation harness, suppliers and categorisation, receivables, reconciliation and the month-end pack together, the n8n workflows and the dashboard. The repo has 266 tests.
 
 Building the synthetic data first meant I always knew the right answer. That made every later number measurable.
 
@@ -52,7 +54,7 @@ On the demo bank statement, 32 of 37 lines (86.5%) match automatically. The othe
 
 The unit tests passed from day one. Most real problems appeared only when I ran the workflows live in n8n with real Google accounts.
 
-**The first extraction prompt missed fields.** It scored 97.4%. Most misses were dates read with the day and month swapped: one invoice's issue date was `2026-09-05`, the model read `2026-05-09`. One invoice legitimately has zero VAT, and the model left the field empty instead of recording 0. I read the misses, changed the prompt and reached 100%. Then I tested on documents I had not used to tune it and got 98.6%. The gap between the two numbers is the lesson: a score on the data you tuned on flatters you.
+**The first extraction prompt missed fields.** It scored 97.4%. I read the misses, changed the prompt and reached 100%. One miss was a date with day and month swapped: 2026-09-05 came back as 2026-05-09. Another was a VAT field that was legitimately zero and came back empty instead of 0. Then I tested on documents I had not used to tune it and got 98.6%. The gap between the two numbers is the lesson: a score on the data you tuned on flatters you.
 
 **A script exit code stopped the workflow.** Invoices that needed review made the script exit with a non-zero code, which n8n treats as a failure. The review route never ran. I added an `--n8n` flag that returns the same result with exit code 0, so a review case is a normal outcome and not an error.
 
@@ -102,7 +104,7 @@ I directed the work and Claude Code wrote the code from my specifications. I set
 
 ## What I am building next
 
-The next version closes the loop, in this order:
+Version 1.1 closes the loop, in this order:
 
 1. **One shared store.** Processed invoices write to a single data source that the Ledger, the pack, the reminders and the dashboard all read.
 2. **An approve step.** The Review queue gets an Approved column. A workflow moves approved rows into the Ledger and the file into Processed.
