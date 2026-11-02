@@ -36,6 +36,19 @@ the project uses; pass `--month YYYY-MM`, `--today YYYY-MM-DD`, or
 for exactly which panels are scoped to the given month versus the
 whole book/statement.
 
+The build is deterministic (same inputs → byte-identical output), so
+`dashboard/index.html` is committed to the repo rather than
+gitignored — regenerate it after changing `--month`/`--today` or any
+of the underlying synthetic data, and commit the new version.
+
+## Live dashboard
+
+The committed `dashboard/index.html` above is generated entirely from
+this project's synthetic/fictional data (see "Dashboard" above) — no
+real company, customer, or financial data anywhere in it. A live copy
+is published via GitHub Pages: **[TODO: add the GitHub Pages URL
+here]**.
+
 ## License
 
 See [LICENSE](LICENSE).

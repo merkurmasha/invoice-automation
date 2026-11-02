@@ -10,6 +10,10 @@ from __future__ import annotations
 from datetime import date
 
 from scripts.dashboard_data import build_dashboard_data
+from src.reconcile import config as reconcile_config
+from src.reconcile import match
+from src.receivables.config import STAGE_OFFSETS_DAYS
+from src.receivables.draft import STAGE_LABELS
 
 
 def _build(tmp_path, month="2026-10", today=date(2026, 10, 28)):
@@ -102,3 +106,26 @@ def test_different_month_changes_spend_and_review_queue(tmp_path):
     # so they must NOT change just because `month` changed.
     assert october["receivables_aging"] == september["receivables_aging"]
     assert october["reconciliation"] == september["reconciliation"]
+
+
+def test_reminder_stage_legend_matches_the_real_scheduling_code(tmp_path):
+    # Must be read from src/receivables/config.py's STAGE_OFFSETS_DAYS
+    # and src/receivables/draft.py's STAGE_LABELS, never hand-typed, so
+    # the legend can't silently drift from the actual scheduling rule.
+    data = _build(tmp_path)
+
+    legend = {entry["stage"]: entry for entry in data["receivables_aging"]["reminder_stage_legend"]}
+
+    assert set(legend) == set(STAGE_OFFSETS_DAYS)
+    for stage, offset_days in STAGE_OFFSETS_DAYS.items():
+        assert legend[stage]["days_after_due"] == offset_days
+        assert legend[stage]["label"] == STAGE_LABELS[stage]
+
+
+def test_bank_statement_through_is_the_real_last_transaction_date(tmp_path):
+    data = _build(tmp_path)
+
+    bank_lines = match.load_bank_statement(reconcile_config.BANK_STATEMENT_PATH)
+    expected = max(line.txn_date for line in bank_lines).isoformat()
+
+    assert data["bank_statement_through"] == expected

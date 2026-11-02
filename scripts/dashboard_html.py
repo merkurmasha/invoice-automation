@@ -16,7 +16,6 @@ colors depending on totals.
 from __future__ import annotations
 
 import html
-from datetime import datetime, timezone
 
 # --- Palette (from the dataviz skill's references/palette.md) -------------
 
@@ -58,6 +57,10 @@ def _money(amount: float, currency: str) -> str:
 
 def _pct(value: float) -> str:
     return f"{value:.1f}%"
+
+
+def _plural(count: int, noun: str) -> str:
+    return f"{count} {noun}" if count == 1 else f"{count} {noun}s"
 
 
 def _css() -> str:
@@ -180,6 +183,8 @@ def _header(data: dict) -> str:
   <div>
     <h1>{esc(data['company'])}</h1>
     <p class="muted">Operations dashboard — {esc(data['month_label'])} (as of {esc(data['today'])})</p>
+    <p class="muted">"{esc(data['today'])}" is a fixed demo date, not live — the bank statement below runs
+    through {esc(data['bank_statement_through'])}.</p>
   </div>
 </header>
 <div class="stat-grid">{''.join(tiles)}</div>
@@ -219,6 +224,17 @@ def _aging_buckets(data: dict) -> str:
             f"</div>"
         )
     return f'<div class="bucket-grid">{"".join(cards)}</div>'
+
+
+def _reminder_legend(data: dict) -> str:
+    parts = []
+    for entry in data["receivables_aging"]["reminder_stage_legend"]:
+        when = "on the due date" if entry["days_after_due"] == 0 else f'{entry["days_after_due"]} day(s) after the due date'
+        parts.append(f'stage {entry["stage"]} ({esc(entry["label"])}) {when}')
+    return (
+        '<p class="muted">Reminder stages: ' + "; ".join(parts) + " — only the latest stage that's "
+        "come due and hasn't been sent yet is ever shown for an invoice.</p>"
+    )
 
 
 def _overdue_table(data: dict) -> str:
@@ -319,7 +335,11 @@ def _reconciliation(data: dict) -> str:
 """.strip()
     else:
         table = '<p class="empty">Every bank line matched automatically.</p>'
-    return f'<p class="secondary">{total} bank line(s) this period — {_pct(recon["match_rate_pct"])} matched automatically.</p>{legend}{bar}{table}'
+    summary = (
+        f'<p class="secondary">{_plural(total, "bank line")} in this statement — '
+        f'{_pct(recon["match_rate_pct"])} matched automatically; the rest goes to a human to confirm.</p>'
+    )
+    return f"{summary}{legend}{bar}{table}"
 
 
 def _accuracy(data: dict) -> str:
@@ -335,7 +355,7 @@ def _accuracy(data: dict) -> str:
         (f'{acc["categorisation_heldout_pct"]:.1f}%', "Categorisation (held-out)", "category assigned correctly"),
         (
             f'{acc["reconciliation_correct"]}/{acc["reconciliation_expected"]}',
-            "Reconciliation",
+            "Reconciliation (test set)",
             f'{acc["reconciliation_false_matches"]} false matches',
         ),
     ]
@@ -344,19 +364,21 @@ def _accuracy(data: dict) -> str:
         f'<div class="label">{esc(label)}</div><div class="sub">{esc(sub)}</div></div>'
         for value, label, sub in tiles
     )
-    note = ""
     if acc["missing"]:
-        note = (
+        source_note = (
             f'<p class="muted">Note: no eval result file was found for {esc(", ".join(acc["missing"]))}; '
             "showing this project's last known hardcoded figures instead (see scripts/eval_summary.py).</p>"
         )
     else:
-        note = '<p class="muted">Read live from this project\'s own eval result files in evals/results/ — see evals/ for the harness that produced them.</p>'
-    return f'<div class="accuracy-grid">{cells}</div>{note}'
+        source_note = '<p class="muted">Read live from this project\'s own eval result files in evals/results/ — see evals/ for the harness that produced them.</p>'
+    fairness_note = (
+        '<p class="muted">Categorisation and matching were tuned on synthetic data; '
+        "the held-out figures are the fairer measure.</p>"
+    )
+    return f'<div class="accuracy-grid">{cells}</div>{source_note}{fairness_note}'
 
 
 def render(data: dict) -> str:
-    generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -376,6 +398,7 @@ def render(data: dict) -> str:
 <section class="panel">
   <div class="panel-head"><h2>Receivables aging</h2><p class="muted">Whole book, as of {esc(data['today'])} — not just {esc(data['month_label'])}</p></div>
   {_aging_buckets(data)}
+  {_reminder_legend(data)}
   {_overdue_table(data)}
 </section>
 
@@ -395,7 +418,7 @@ def render(data: dict) -> str:
 </section>
 
 <footer>
-  <p>Generated {esc(generated_at)}.</p>
+  <p>Built from this project's synthetic data (demo date {esc(data['today'])}, month {esc(data['month_label'])}).</p>
   <p>Synthetic data. Nothing in this project is sent automatically; reminders are Gmail drafts a human approves.</p>
 </footer>
 </body>

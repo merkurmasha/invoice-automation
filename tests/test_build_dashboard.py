@@ -108,6 +108,7 @@ def test_supplier_and_customer_names_with_html_special_characters_are_escaped():
         "month": "2026-10",
         "month_label": "October 2026",
         "today": "2026-10-28",
+        "bank_statement_through": "2026-11-06",
         "headline": {
             "total_spend": [{"currency": "EUR", "total": 1.0}],
             "open_receivables": 1.0,
@@ -130,6 +131,11 @@ def test_supplier_and_customer_names_with_html_special_characters_are_escaped():
                     "bucket": "1-30",
                     "reminder": None,
                 }
+            ],
+            "reminder_stage_legend": [
+                {"stage": 1, "label": "First reminder", "days_after_due": 0},
+                {"stage": 2, "label": "Second <reminder>", "days_after_due": 7},
+                {"stage": 3, "label": "Final notice", "days_after_due": 14},
             ],
         },
         "review_queue": [
@@ -168,6 +174,8 @@ def test_supplier_and_customer_names_with_html_special_characters_are_escaped():
     assert "&lt;script&gt;" in html_text
     assert "<img src=x onerror=alert(1)>" not in html_text
     assert "O&#x27;Brien &amp; &lt;Sons&gt;" in html_text
+    assert "<reminder>" not in html_text
+    assert "Second &lt;reminder&gt;" in html_text
 
 
 def test_cli_main_prints_one_json_object_and_exits_zero(tmp_path, capsys):
@@ -208,3 +216,45 @@ def test_run_build_dashboard_reports_error_not_crash_on_unwritable_out_dir(tmp_p
 
     assert result["status"] == "error"
     assert "error" in result
+
+
+def test_bank_line_count_is_pluralized_correctly(tmp_path):
+    html_text = _render_october(tmp_path)
+
+    # October's real data has 37 bank lines (see test_dashboard_data.py)
+    # and none of them should ever read "1 bank lines" or "37 bank line".
+    assert "37 bank lines" in html_text
+    assert "37 bank line " not in html_text
+    assert "1 bank lines" not in html_text
+
+
+def test_reconciliation_match_rate_states_the_rest_goes_to_a_human(tmp_path):
+    html_text = _render_october(tmp_path)
+
+    assert "the rest goes to a human to confirm" in html_text
+    assert "in this statement" in html_text
+
+
+def test_accuracy_strip_labels_reconciliation_as_test_set_with_fairness_note(tmp_path):
+    html_text = _render_october(tmp_path)
+
+    assert "Reconciliation (test set)" in html_text
+    assert (
+        "Categorisation and matching were tuned on synthetic data; "
+        "the held-out figures are the fairer measure." in html_text
+    )
+
+
+def test_building_the_same_dashboard_twice_is_byte_identical(tmp_path):
+    # Matches the reproducibility property src/pack/build.py's own
+    # tests lock in (test_building_the_same_month_twice_is_byte_identical)
+    # - now that dashboard/index.html is committed, it must not churn
+    # on every rebuild from the same inputs.
+    month, today = OCTOBER
+    out1 = tmp_path / "run1" / "index.html"
+    out2 = tmp_path / "run2" / "index.html"
+
+    build_dashboard_module.run_build_dashboard(month, today, out1)
+    build_dashboard_module.run_build_dashboard(month, today, out2)
+
+    assert out1.read_text(encoding="utf-8") == out2.read_text(encoding="utf-8")

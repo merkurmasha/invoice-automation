@@ -31,6 +31,7 @@ from datetime import date
 
 from src.pack import build as pack_build
 from src.receivables import aging
+from src.receivables.config import STAGE_OFFSETS_DAYS
 from src.receivables.draft import STAGE_LABELS
 from src.receivables.schedule import ReminderDue, reminders_due
 from src.receivables.tracker import STATUS_PAID, ReceivablesTracker
@@ -56,16 +57,18 @@ def _month_matches(d: date, month: str) -> bool:
     return f"{d.year:04d}-{d.month:02d}" == month
 
 
-def _reconcile_everything() -> tuple[list[match.MatchDecision], list[ledger.Obligation]]:
+def _reconcile_everything() -> tuple[list[match.MatchDecision], list[ledger.Obligation], list[match.BankLine]]:
     """Runs the real matcher over the whole bank statement against both
     ledgers, exactly like src.reconcile.run.main() does. Returns the
-    decisions and the (now payment-mutated) obligations list."""
+    decisions, the (now payment-mutated) obligations list, and the raw
+    bank lines (so the caller can report the statement's actual date
+    range without re-reading the file)."""
     bank_lines = match.load_bank_statement(reconcile_config.BANK_STATEMENT_PATH)
     payables = ledger.load_payable_obligations(reconcile_config.ANSWER_KEY_PATH)
     receivables = ledger.load_receivable_obligations(reconcile_config.SALES_INVOICES_PATH)
     obligations = payables + receivables
     decisions = match.reconcile(bank_lines, obligations)
-    return decisions, obligations
+    return decisions, obligations, bank_lines
 
 
 def _tracker_after_reconciliation(receivables: list[ledger.Obligation]) -> ReceivablesTracker:
@@ -128,6 +131,18 @@ def _review_queue(answer_key_entries: list[dict], month: str) -> list[dict]:
     return queue
 
 
+def _reminder_stage_legend() -> list[dict]:
+    """The real reminder-stage thresholds, read straight from
+    src/receivables/config.py (STAGE_OFFSETS_DAYS) and
+    src/receivables/draft.py (STAGE_LABELS) — never hand-typed here, so
+    the legend can't silently drift out of sync with the actual
+    scheduling rule in src/receivables/schedule.py."""
+    return [
+        {"stage": stage, "label": STAGE_LABELS[stage], "days_after_due": STAGE_OFFSETS_DAYS[stage]}
+        for stage in sorted(STAGE_OFFSETS_DAYS)
+    ]
+
+
 def _reminder_for(invoice_number: str, reminders: list[ReminderDue]) -> dict | None:
     for reminder in reminders:
         if reminder.invoice_id == invoice_number:
@@ -173,7 +188,7 @@ def _receivables_aging(tracker: ReceivablesTracker, today: date, nonexistent_log
         )
     overdue.sort(key=lambda item: -item["days_overdue"])
 
-    return {"buckets": buckets, "overdue_invoices": overdue}
+    return {"buckets": buckets, "overdue_invoices": overdue, "reminder_stage_legend": _reminder_stage_legend()}
 
 
 def _open_receivables_total(aging_data: dict) -> float:
@@ -217,9 +232,10 @@ def build_dashboard_data(month: str, today: date, nonexistent_log_path) -> dict:
     answer_key_entries: list[dict] = json.loads(reconcile_config.ANSWER_KEY_PATH.read_text())
     statuses = pack_build.validation_statuses(answer_key_entries)
 
-    decisions, obligations = _reconcile_everything()
+    decisions, obligations, bank_lines = _reconcile_everything()
     receivables = [ob for ob in obligations if ob.kind == ledger.RECEIVABLE]
     tracker = _tracker_after_reconciliation(receivables)
+    bank_statement_through = max(line.txn_date for line in bank_lines).isoformat()
 
     aging_data = _receivables_aging(tracker, today, nonexistent_log_path)
     spend_by_category = _spend_by_category(answer_key_entries, month, statuses)
@@ -233,6 +249,7 @@ def build_dashboard_data(month: str, today: date, nonexistent_log_path) -> dict:
         "month": month,
         "month_label": _month_label(month),
         "today": today.isoformat(),
+        "bank_statement_through": bank_statement_through,
         "headline": {
             "total_spend": total_spend,
             "open_receivables": _open_receivables_total(aging_data),

@@ -230,7 +230,13 @@ data/reconcile/
 data/packs/
 data/suppliers.csv
 evals/results/*.tmp
-dashboard/
+# Generated dashboard output: index.html is committed on purpose (it's
+# the portfolio deliverable, contains only fictional data, and the
+# build is deterministic - see scripts/build_dashboard.py). Anything
+# else ever written under dashboard/ (e.g. a non-default --out target)
+# stays ignored.
+dashboard/*
+!dashboard/index.html
 .DS_Store
 
 # n8n (phase 8): local data folder — holds the SQLite DB, credentials
