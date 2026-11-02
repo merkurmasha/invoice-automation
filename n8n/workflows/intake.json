@@ -56,6 +56,7 @@
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
       "position": [20, 0],
+      "executeOnce": false,
       "parameters": {
         "command": "={{ 'cd ' + $env.INVOICE_AUTOMATION_REPO + ' && .venv/bin/python -m scripts.process_invoice --n8n ' + $json.fileName }}"
       }
@@ -67,7 +68,8 @@
       "typeVersion": 2,
       "position": [240, 0],
       "parameters": {
-        "jsCode": "const parsed = JSON.parse($input.item.json.stdout);\nconst driveFile = $('Watch Invoices-Inbox').item.json;\nreturn [{ json: { ...parsed, drive_file_id: driveFile.id, drive_file_name: driveFile.name } }];"
+        "mode": "runOnceForEachItem",
+        "jsCode": "const parsed = JSON.parse($input.item.json.stdout);\nconst driveFile = $('Watch Invoices-Inbox').item.json;\nreturn { json: { ...parsed, drive_file_id: driveFile.id, drive_file_name: driveFile.name } };"
       }
     },
     {

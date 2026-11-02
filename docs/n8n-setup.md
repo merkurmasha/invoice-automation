@@ -452,3 +452,33 @@ API quirk, not a bug in this project's scripts —
 invoice number + total, in `data/cache/seen_invoices.json`) will
 correctly flag the second run as a `DUPLICATE` and route it to the
 review queue rather than double-booking it.
+
+**Only the first file of a batch gets processed; the rest stay in
+`Invoices-Inbox`.** The Google Drive Trigger polls on a timer, so if
+several files land in the watched folder between polls, one trigger
+run carries all of them as separate items — "Run process_invoice.py"
+and "Parse result" must then handle each item independently. Two
+settings control this, and `tests/test_n8n_workflows.py`'s
+`test_execute_command_nodes_process_every_item_not_just_the_first` and
+`test_code_nodes_downstream_of_batching_triggers_run_once_per_item`
+fail the suite if either regresses:
+1. "Run process_invoice.py"'s node settings (the gear icon, not the
+   parameters panel) must have **Execute Once** turned **off**. When
+   it's on, n8n runs the command only for the first item and silently
+   drops the rest — they never reach "Parse result" at all, so the
+   files stay sitting in `Invoices-Inbox` with no error anywhere.
+2. "Parse result"'s node settings must have **Mode** set to **Run Once
+   for Each Item**, not the default "Run Once for All Items". In the
+   default mode, `$input.item` only ever resolves (or is even defined)
+   for a single item, so with more than one incoming item the code
+   either throws or silently only emits the first one. In "Run Once
+   for Each Item" mode the same `$input.item` / `$('Watch
+   Invoices-Inbox').item` expressions now correctly resolve to *that*
+   item on each run, and the node's `return` must change shape to
+   match: a single `{ json: { ... } }` object, not an array of one.
+
+If you already imported `intake.json` before this fix, re-import it
+(or open "Run process_invoice.py" and "Parse result" and set both
+switches by hand) — a previously-imported workflow keeps whatever
+settings it had at import time and won't pick up the JSON file's
+updated defaults on its own.

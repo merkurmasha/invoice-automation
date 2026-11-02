@@ -42,6 +42,23 @@ _DRIVE_LINK_SOURCE_NODE = {
 # below actually send something.
 _SEND_OPERATIONS = {"send", "reply", "replyAll"}
 
+# Execute Command nodes that sit downstream of a trigger that can emit
+# more than one item per run (a polling trigger batching up everything
+# new since the last poll) must process every item, not just the
+# first — "Execute Once" silently drops every item after the first.
+# Keyed by node name -> the workflow file it lives in.
+_MUST_NOT_EXECUTE_ONCE = {
+    "Run process_invoice.py": "intake.json",
+}
+
+# Code nodes downstream of the same kind of multi-item trigger must run
+# their JS once per item ("Run Once for Each Item"), not once for the
+# whole batch — the default mode only ever sees/returns the first item
+# when $input.item is used. Keyed by node name -> the workflow file.
+_MUST_RUN_ONCE_PER_ITEM = {
+    "Parse result": "intake.json",
+}
+
 # Secret-shaped strings that should never appear in a committed workflow
 # export. Matches common API key/token prefixes and long opaque blobs —
 # deliberately broad, since the only thing that belongs here is
@@ -205,3 +222,46 @@ def test_receivables_schedule_trigger_is_disabled_by_default():
     assert schedule_nodes, "Expected a Schedule Trigger node in receivables.json"
     for node in schedule_nodes:
         assert node.get("disabled") is True, f"Schedule Trigger node {node.get('name')!r} must be disabled by default"
+
+
+def test_execute_command_nodes_process_every_item_not_just_the_first():
+    workflows_by_file = {
+        path.name: json.loads(path.read_text(encoding="utf-8")) for path in _workflow_files()
+    }
+    for node_name, workflow_file in _MUST_NOT_EXECUTE_ONCE.items():
+        workflow = workflows_by_file[workflow_file]
+        nodes_by_name = {n.get("name"): n for n in _iter_nodes(workflow)}
+        node = nodes_by_name[node_name]
+        assert node.get("type") == "n8n-nodes-base.executeCommand", f"{node_name} is not an Execute Command node"
+        assert node.get("executeOnce") is not True, (
+            f"{workflow_file}: node {node_name!r} has 'Execute Once' enabled — a polling trigger "
+            "upstream can emit several items in one run (several files added since the last poll), "
+            "and Execute Once silently runs the command for only the first of them, leaving every "
+            "other file stuck unprocessed in the watched folder"
+        )
+
+
+def test_code_nodes_downstream_of_batching_triggers_run_once_per_item():
+    workflows_by_file = {
+        path.name: json.loads(path.read_text(encoding="utf-8")) for path in _workflow_files()
+    }
+    for node_name, workflow_file in _MUST_RUN_ONCE_PER_ITEM.items():
+        workflow = workflows_by_file[workflow_file]
+        nodes_by_name = {n.get("name"): n for n in _iter_nodes(workflow)}
+        node = nodes_by_name[node_name]
+        assert node.get("type") == "n8n-nodes-base.code", f"{node_name} is not a Code node"
+
+        params = node.get("parameters", {})
+        assert params.get("mode") == "runOnceForEachItem", (
+            f"{workflow_file}: Code node {node_name!r} must set mode to 'runOnceForEachItem' — "
+            "the default 'Run Once for All Items' mode only exposes/returns a single item via "
+            "$input.item, so with more than one incoming item the rest are silently dropped"
+        )
+
+        js_code = params.get("jsCode", "")
+        assert not re.search(r"return\s*\[\s*\{", js_code), (
+            f"{workflow_file}: Code node {node_name!r} is set to run once per item but its "
+            "jsCode still returns an array of items (return [{ ... }]) — in 'Run Once for Each "
+            "Item' mode it must return a single item object (return { json: { ... } }), or n8n "
+            "rejects the node's output"
+        )
