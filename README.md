@@ -46,8 +46,7 @@ of the underlying synthetic data, and commit the new version.
 The committed `dashboard/index.html` above is generated entirely from
 this project's synthetic/fictional data (see "Dashboard" above) — no
 real company, customer, or financial data anywhere in it. A live copy
-is published via GitHub Pages: **[TODO: add the GitHub Pages URL
-here]**.
+is published via GitHub Pages: <https://merkurmasha.github.io/invoice-automation/dashboard/>.
 
 ## License
 
