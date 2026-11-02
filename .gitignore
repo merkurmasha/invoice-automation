@@ -230,6 +230,7 @@ data/reconcile/
 data/packs/
 data/suppliers.csv
 evals/results/*.tmp
+dashboard/
 .DS_Store
 
 # n8n (phase 8): local data folder — holds the SQLite DB, credentials
