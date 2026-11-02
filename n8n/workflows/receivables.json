@@ -57,13 +57,13 @@
       "parameters": {
         "resource": "draft",
         "operation": "create",
-        "subject": "={{ $json.drafts.subject }}",
+        "subject": "={{ $json.subject }}",
         "emailType": "text",
-        "message": "={{ $json.drafts.body }}",
+        "message": "={{ $json.body }}",
         "options": {}
       },
       "notesInFlow": true,
-      "notes": "Recipient is left blank on purpose — this project's synthetic sales_invoices.csv only has a customer NAME (see $json.drafts.to), not a real email address. Look the customer up and fill in the To field in Gmail before sending.",
+      "notes": "Recipient is left blank on purpose — this project's synthetic sales_invoices.csv only has a customer NAME (see $json.to), not a real email address. Look the customer up and fill in the To field in Gmail before sending.",
       "credentials": {
         "gmailOAuth2Api": { "id": "", "name": "Gmail account" }
       }
@@ -82,13 +82,13 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "Date": "={{ $('Parse result').item.json.today }}",
-            "Invoice": "={{ $('Split drafts').item.json.drafts.invoice }}",
-            "Stage": "={{ $('Split drafts').item.json.drafts.stage }}",
-            "Customer": "={{ $('Split drafts').item.json.drafts.to }}",
-            "Subject": "={{ $('Split drafts').item.json.drafts.subject }}",
-            "Needs Review": "={{ $('Split drafts').item.json.drafts.needs_review }}",
-            "Status": "DRAFTED - awaiting human send"
+            "Date": "={{ $now.toISODate() }}",
+            "Invoice": "={{ $('Split drafts').item.json.invoice }}",
+            "Stage": "={{ $('Split drafts').item.json.stage }}",
+            "Customer": "={{ $('Split drafts').item.json.to }}",
+            "Subject": "={{ $('Split drafts').item.json.subject }}",
+            "Needs Review": "={{ $('Split drafts').item.json.needs_review }}",
+            "Status": "Drafted"
           }
         },
         "options": {}

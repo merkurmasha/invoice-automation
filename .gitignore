@@ -224,6 +224,7 @@ __marimo__/
 data/cache/
 data/review_queue.csv
 data/reminder_log.csv
+data/**/*.bak
 data/drafts/
 data/reconcile/
 data/packs/
