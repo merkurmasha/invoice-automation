@@ -54,7 +54,9 @@ flowchart TD
 
 ## Screenshots
 
-No dashboard screenshot is checked into this repo yet (`docs/images/` is empty) — see the live dashboard instead: <https://merkurmasha.github.io/invoice-automation/dashboard/>.
+![Dashboard screenshot](docs/images/dashboard.png)
+
+Live dashboard, generated from synthetic data: <https://merkurmasha.github.io/invoice-automation/dashboard/>
 
 ## Results
 
